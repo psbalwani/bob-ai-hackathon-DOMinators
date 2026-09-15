@@ -1,47 +1,31 @@
 # Source Code
 
-Place all your project's source code in this folder.
+One module per track (see `docs/03_team_division.md`), plus the frontend:
 
-## Structure Guidelines
-
-Organize your code logically. Here are common patterns — use whatever fits
-your project:
-
-### Web Application
 ```
 src/
-  backend/        ← API server code
-  frontend/       ← UI code
-  shared/         ← Shared utilities/types
+  data/            ← Track C: synthetic dataset generator + ICH E6(R2) corpus
+  detection/       ← Track A: deviation detection & severity classification
+  risk_scoring/    ← Track B: site-level risk scoring
+  capa/            ← Track C: CAPA report generation
+  backend/         ← Track D: gateway that orchestrates the four modules above
+                     (in-process, not HTTP proxying) and serves the dashboard
+  frontend/        ← Track D: React + Vite + Tailwind dashboard
+  .env.example     ← Copy to .env and fill in (see docs/setup-guide.md)
 ```
 
-### Data / AI Project
-```
-src/
-  data/           ← Data ingestion / preprocessing
-  models/         ← ML model code
-  api/            ← Serving layer
-  notebooks/      ← Jupyter notebooks (exploration)
-```
+Each of `detection/`, `risk_scoring/`, and `capa/` also exposes its own small
+standalone FastAPI service (ports 8001-8003) for isolated testing, independent of the
+gateway in `backend/` (port 8000) that the frontend actually talks to — see each
+module's own `README.md` and `docs/setup-guide.md` for exact run commands.
 
-### CLI / Script-based Tool
-```
-src/
-  cli/            ← CLI entry points
-  lib/            ← Core logic
-  utils/          ← Helpers
-```
+## Important Files
 
-## Important Files to Include
-
-- `requirements.txt` or `package.json` — dependency manifest
-- `.env.example` — template for environment variables (NEVER commit `.env`)
-- Any database migration files
-- Configuration files
+- `requirements.txt` (repo root) — shared Python dependency manifest for all four tracks
+- `src/frontend/package.json` — frontend dependencies
+- `.env.example` (this directory) / `src/frontend/.env.example` — environment variable templates (NEVER commit the real `.env`)
 
 ## What NOT to Include in src/
 
 - `.env` files with real secrets
-- Large binary files (use Git LFS or link externally)
-- `node_modules/` or `venv/` (these are in `.gitignore`)
-- Build artifacts (`dist/`, `build/`, `__pycache__/`)
+- `node_modules/`, `.venv/`, `__pycache__/`, `dist/`, `build/` (already in `.gitignore`)

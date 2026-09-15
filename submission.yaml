@@ -51,8 +51,8 @@ submission:
     languages: ["Python", "TypeScript"]                      # REQUIRED — e.g., ["Python", "TypeScript"]
     frameworks: ["FastAPI", "React"]                     # e.g., ["FastAPI", "React"]
     ibm_technologies: ["IBM Bob", "watsonx.ai"]               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
-    databases: ["PostgreSQL"]                      # e.g., ["PostgreSQL", "Redis"]
-    other: ["Docker"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
+    databases: ["PostgreSQL (Neon)"]                      # e.g., ["PostgreSQL", "Redis"]
+    other: ["SQLAlchemy", "Vite", "Tailwind CSS"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
 
   what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
     The multi-agent handoff — deviation detection, severity classification,
@@ -65,7 +65,13 @@ submission:
     a real EDC feed. Severity classification currently relies on rule-based
     logic mapped to ICH E6(R2)-era deviation categories rather than a
     fully validated GCP taxonomy, and site risk scoring uses a limited set
-    of leading indicators due to hackathon time constraints.
+    of leading indicators due to hackathon time constraints. The backend
+    persists to PostgreSQL (Neon) if a connection string is configured, but
+    falls back to an in-memory store otherwise -- persistence has been
+    verified against that in-memory fallback, not yet against a live Neon
+    instance. Docker Compose was deliberately skipped in favor of the hosted
+    Neon connection string to save setup time; the app runs directly via
+    pip/npm with no containerization.
 
 # =============================================================================
 # ARTIFACT LOCATIONS

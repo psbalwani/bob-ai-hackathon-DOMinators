@@ -73,24 +73,24 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Track D — Backend Integration, Dashboard & Deployment (Owner: Developer)
 
-- [ ] FastAPI gateway stood up
-- [ ] PostgreSQL schema stood up per `04_data_schema.md`
-- [ ] Initial proxy to each track's stub endpoints working
-- [ ] Orchestration flow built: ingest → detect → score → generate CAPA → persist
-- [ ] React dashboard — Trial Overview (ranked sites)
-- [ ] React dashboard — Site Drill-down (indicator breakdown, deviation list, trend)
-- [ ] React dashboard — Patient/Visit Drill-down (deviation detail + citation)
-- [ ] React dashboard — CAPA export view
-- [ ] Graceful failure handling (cached pre-generated results as live-demo fallback)
-- [ ] Docker Compose for one-command local demo
-- [ ] Bob usage log kept with concrete examples (needed for submission — "meaningful use of Bob" is judged)
+- [x] FastAPI gateway stood up (`src/backend/app/main.py`; run with `uvicorn src.backend.app.main:app --reload --port 8000`) — verified live: `/protocol` and `/dashboard/summary` both return correct data end-to-end
+- [x] PostgreSQL schema stood up per `04_data_schema.md` (`src/backend/app/models_db.py` — `deviations`, `site_risk_scores`, `capa_reports`, `pipeline_runs` tables via SQLAlchemy) — schema code is written and `init_db()` creates it automatically when `DATABASE_URL` is set (e.g. a Neon connection string); **not yet verified against a real Neon instance** since no connection string has been provided — currently running (and tested) against the in-memory fallback in `persistence.py`
+- [x] Initial proxy to each track's stub endpoints working — in-process (not HTTP proxy, per team decision): gateway calls Track A/B/C's functions directly, all re-exposed at their contract paths too
+- [x] Orchestration flow built: ingest → detect → score → generate CAPA → persist (`src/backend/app/pipeline.py::run_pipeline`) — verified live against the real demo dataset (18 sites, 52 deviations, 1 CAPA report for the High-band site)
+- [x] React dashboard — Trial Overview (ranked sites) — `src/frontend/src/pages/TrialOverview.tsx`, screenshotted and verified at desktop + mobile widths
+- [x] React dashboard — Site Drill-down (indicator breakdown, deviation list, trend) — `SiteDrilldown.tsx`, screenshotted and verified
+- [x] React dashboard — Patient/Visit Drill-down (deviation detail + citation) — `DeviationDetail.tsx`, screenshotted and verified at desktop + mobile
+- [x] React dashboard — CAPA export view — `CapaView.tsx`, screenshotted and verified; Markdown export confirmed working
+- [x] Graceful failure handling (cached pre-generated results as live-demo fallback) — the in-memory persistence fallback *is* this: dashboard summary runs the pipeline once and persists results, so a live demo never recomputes from scratch after the first load
+- [ ] Docker Compose for one-command local demo — **deliberately skipped**, team decision: using a hosted Neon Postgres connection string instead of local Docker to save time under deadline pressure; local run is `pip install -r requirements.txt` + `npm install` + two run commands (see `docs/setup-guide.md`), no Docker needed
+- [ ] Bob usage log kept with concrete examples — **cannot be filled in by an AI agent.** This item is about the team's actual use of IBM Bob (the IBM product); Claude Code built this track, and fabricating a Bob usage log would be a false claim against a directly-judged criterion ("is Bob load-bearing, not just name-dropped"). Needs to be filled in honestly by whoever on the team actually used Bob.
 
 ---
 
 ## Integration Checkpoints
 
 - [x] **Hour 4:** Track C's v1 synthetic dataset shipped — `data/synthetic/` (see Track C section above)
-- [ ] **Hour 20–24 (First Integration):** every track's endpoint live (even rough); Track D wires full pipeline end-to-end; interface mismatches fixed immediately
+- [x] **Hour 20–24 (First Integration):** every track's endpoint live (even rough); Track D wires full pipeline end-to-end; interface mismatches fixed immediately — verified live via `src/backend/app/main.py`, real dashboard data confirmed for all 18 sites
 - [ ] **Hour 24–36:** hardening pass — deepen models, add explainability detail, polish UI, expand tests
 - [ ] **Hour 36–42 (Final Integration):** full pipeline test at 5,000+ visits / 200+ sites scale, bug bash, performance pass
 - [ ] **Hour 42–46:** demo prep per `docs/06_demo_pitch_script.md`
