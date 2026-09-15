@@ -1,21 +1,17 @@
 # Setup Guide
 
 > **This file is read by the automated evaluation pipeline. Be precise and complete.**
->
-> This guide reflects the planned setup per [`docs/architecture.md`](architecture.md) (`src/backend` = FastAPI, `src/frontend` = React, PostgreSQL, Docker Compose). Update the exact commands here once the corresponding code lands in `src/`.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
 - [ ] Python 3.11+
 - [ ] Node.js 18+
-- [ ] Docker Desktop
-- [ ] An IBM Cloud account with watsonx.ai access
+- [ ] An IBM Cloud account with watsonx.ai access (optional — see below)
+- [ ] A Neon (or any hosted) PostgreSQL connection string (optional — see below)
 
 ## Environment Variables
 
-Copy `src/.env.example` to `src/.env` and fill in the values:
+Copy `src/.env.example` to `src/.env` and fill in the values you want to use:
 
 ```bash
 cp src/.env.example src/.env
@@ -23,13 +19,25 @@ cp src/.env.example src/.env
 
 | Variable | Description | Required |
 |---|---|---|
-| `WATSONX_API_KEY` | IBM watsonx.ai API key | No — only used for the one ambiguous late-visit severity case in Track A's detector (`src/detection/llm_hook.py`); without it, that case falls back to a deterministic default and everything else works unchanged |
+| `WATSONX_API_KEY` | IBM watsonx.ai API key | No — only used for the one ambiguous late-visit severity case in Track A's detector (`src/detection/llm_hook.py`) and for optional CAPA narrative refinement (`src/capa/llm_hook.py`); without it, both fall back to deterministic behavior and everything else works unchanged |
 | `WATSONX_URL` | watsonx.ai region endpoint, e.g. `https://eu-de.ml.cloud.ibm.com` | Only if using the above |
 | `WATSONX_SPACE_ID` | watsonx.ai deployment space ID — **preferred** over `WATSONX_PROJECT_ID`; a project without an attached WML instance will 403 even with valid credentials | Only if using the above |
 | `WATSONX_PROJECT_ID` | watsonx.ai project ID (fallback if no space is available) | Only if using the above |
 | `WATSONX_MODEL_ID` | Model to call, e.g. `ibm/granite-13b-instruct-v2` | No (has a default) |
-| `DATABASE_URL` | PostgreSQL connection string | Reserved for Track D (orchestration/persistence) — not used by any code yet |
-| `APP_PORT` | Backend API port | No (default `8000`) — Track A's own service currently runs on port `8001` (see `src/detection/README.md`) so it doesn't collide with Track D's future gateway |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | Fallback LLM option | No — skeleton only, not wired into any code path yet |
+| `DATABASE_URL` | A PostgreSQL connection string (e.g. from [Neon](https://neon.tech), `postgresql://user:pass@host/db`) | No — Track D's backend (`src/backend`) falls back to an in-memory store if this isn't set, so the app runs with zero DB setup. Set this to get real persistence across restarts. |
+| `APP_PORT` | Backend gateway port | No (default `8000`) |
+
+The frontend (`src/frontend`) reads its own `.env` — copy `src/frontend/.env.example` to `src/frontend/.env.local` if the backend isn't on the default `http://localhost:8000`.
+
+Each track's own standalone service can also be run independently against its own port, for isolated testing:
+
+| Track | Service | Default port |
+|---|---|---|
+| A — Deviation detection | `src/detection/api.py` | 8001 |
+| B — Risk scoring | `src/risk_scoring/api.py` | 8002 |
+| C — CAPA generation | `src/capa/api.py` | 8003 |
+| D — Gateway (used by the frontend) | `src/backend/app/main.py` | 8000 |
 
 ## Installation
 
@@ -38,63 +46,69 @@ cp src/.env.example src/.env
 git clone https://github.com/psbalwani/bob-ai-hackathon-DOMinators.git
 cd bob-ai-hackathon-DOMinators
 
-# 2. Install backend dependencies
-cd src/backend
+# 2. Install Python dependencies (shared across all four tracks)
 pip install -r requirements.txt
 
 # 3. Install frontend dependencies
-cd ../frontend
+cd src/frontend
 npm install
+cd ../..
 
-# 4. Set up the database
-docker compose up -d db
-# then run migrations, e.g.:
-# alembic upgrade head
+# 4. Generate the synthetic dataset every track builds/tests against
+python src/data/generate_synthetic_data.py
 ```
 
 ## Running the Application
 
 ```bash
-# Start the backend (from src/backend)
-uvicorn app.main:app --reload --port 8000
+# Start the Track D gateway (from repo root)
+uvicorn src.backend.app.main:app --reload --port 8000
 
 # Start the frontend (in a separate terminal, from src/frontend)
+cd src/frontend
 npm run dev
 ```
 
-The application will be available at: `http://localhost:5173` (frontend), API at `http://localhost:8000`.
+The application is available at `http://localhost:5173` (frontend), gateway API at `http://localhost:8000`.
 
-Or, to bring up the full stack (Postgres + backend + frontend) at once:
-
-```bash
-docker compose up
-```
+No Docker Compose / local Postgres setup is required — the gateway runs fully in-memory
+without `DATABASE_URL` set. If you have a Neon connection string, set `DATABASE_URL` in
+`src/.env` and the gateway will create its tables and persist there instead on next start.
 
 ## Running Tests
 
 ```bash
-# Backend
-cd src/backend
+# All tracks, from repo root
 pytest tests/ -v
-
-# Deviation-detection recall / seeded test cases
-pytest tests/test_deviation_detection.py -v
 ```
 
-## Quick Demo (Optional)
+Note: with real `WATSONX_API_KEY` credentials configured, `tests/test_api.py` and
+`tests/test_capa.py` can be significantly slower (their `TestClient` triggers the app's
+real startup path, which may make live watsonx.ai calls for ambiguous cases). This is a
+known trade-off of testing against live credentials, not a bug — unset `WATSONX_API_KEY`
+for a fast, fully deterministic test run if needed.
+
+## Quick Demo
 
 ```bash
-python src/backend/scripts/seed_demo_data.py   # loads the synthetic protocol + visit dataset
-open http://localhost:5173
+python src/data/generate_synthetic_data.py   # if you haven't already
+uvicorn src.backend.app.main:app --reload --port 8000
+# in a second terminal:
+cd src/frontend && npm run dev
 ```
 
-Recommended demo path: Trial Overview → highest-risk Site Drill-down → a single Deviation Detail (severity + protocol citation) → generate/open the CAPA report for that site.
+Then open `http://localhost:5173`. Recommended demo path: **Trial Overview** (ranked
+sites) → click the highest-risk site → **Site Drill-down** (indicator breakdown,
+deviation list, trend) → click a deviation → **Deviation Detail** (severity rationale +
+protocol citation) → back to the site → open its **CAPA report** (root cause /
+corrective / preventive action + evidence citations, exportable as Markdown).
 
 ## Troubleshooting
 
 | Issue | Solution |
 |---|---|
-| `ModuleNotFoundError` | Re-run `pip install -r requirements.txt` inside `src/backend` |
-| Database connection refused | Ensure PostgreSQL is running: `docker compose up -d db` |
-| `watsonx.ai` 401 error | Check `WATSONX_API_KEY` / `WATSONX_PROJECT_ID` in `src/.env` |
-| Frontend can't reach API | Confirm the backend is running on the port set in `APP_PORT` and CORS is enabled for `localhost:5173` |
+| `ModuleNotFoundError` | Re-run `pip install -r requirements.txt` from repo root |
+| `npm run dev` fails to reach the API | Confirm the gateway is running on port 8000 and CORS is enabled for `localhost:5173` (it is, by default, in `src/backend/app/main.py`) |
+| `watsonx.ai` 401/403 error | Check `WATSONX_API_KEY` / `WATSONX_SPACE_ID` in `src/.env`; prefer `WATSONX_SPACE_ID` over `WATSONX_PROJECT_ID` (see table above) |
+| Dashboard is empty on first load | The gateway runs the full pipeline once, lazily, on the first `/dashboard/summary` request — this can take longer than usual if real watsonx credentials are set (see the Tests note above); subsequent loads are fast since results are persisted |
+| Data directory not found | Run `python src/data/generate_synthetic_data.py` from repo root first |

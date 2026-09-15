@@ -15,3 +15,10 @@ ibm-watsonx-ai>=1.1
 # Only imported lazily by src/capa/export.py for PDF export; markdown export
 # (the reliable demo path) works without it.
 fpdf2>=2.7
+
+# Track D gateway (src/backend). sqlalchemy is always needed; psycopg2 is
+# only actually used if DATABASE_URL is set (e.g. a Neon connection string)
+# -- src/backend/app/db.py falls back to an in-memory store otherwise, so
+# these don't block a DB-less local run.
+sqlalchemy>=2.0
+psycopg2-binary>=2.9

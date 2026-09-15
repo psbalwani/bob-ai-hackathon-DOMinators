@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  /* Neutral surface scale */
+  --color-surface: #f7f8fa;
+  --color-surface-dark: #0b0d12;
+  --color-card: #ffffff;
+  --color-card-dark: #12151b;
+  --color-border: #e4e7ec;
+  --color-border-dark: #232833;
+  --color-ink: #101828;
+  --color-ink-dark: #eef1f6;
+  --color-muted: #667085;
+  --color-muted-dark: #8b93a3;
+
+  /* Brand (distinct from risk semantics so nothing is ever ambiguous) */
+  --color-brand: #4338ca;
+  --color-brand-soft: #eef2ff;
+  --color-brand-soft-dark: #1e2247;
+
+  /* Risk semantics */
+  --color-risk-high: #dc2626;
+  --color-risk-high-soft: #fef2f2;
+  --color-risk-high-soft-dark: #3a1414;
+  --color-risk-medium: #d97706;
+  --color-risk-medium-soft: #fffbeb;
+  --color-risk-medium-soft-dark: #3a2a0c;
+  --color-risk-low: #059669;
+  --color-risk-low-soft: #ecfdf5;
+  --color-risk-low-soft-dark: #0d2b22;
+
+  --radius-card: 0.75rem;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: var(--color-surface-dark);
+    --color-card: var(--color-card-dark);
+    --color-border: var(--color-border-dark);
+    --color-ink: var(--color-ink-dark);
+    --color-muted: var(--color-muted-dark);
+    --color-brand-soft: var(--color-brand-soft-dark);
+    --color-risk-high-soft: var(--color-risk-high-soft-dark);
+    --color-risk-medium-soft: var(--color-risk-medium-soft-dark);
+    --color-risk-low-soft: var(--color-risk-low-soft-dark);
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-brand-soft);
+}
+
+/* Thin, unobtrusive scrollbars -- default browser scrollbars are one of
+   the fastest tells of an unpolished app. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+  border: 2px solid var(--color-surface);
+}
