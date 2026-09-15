@@ -47,12 +47,12 @@ This is the single source of truth for what's left before submission. It covers 
 - [x] Weighted scoring model implemented (`src/risk_scoring/indicators.py`, `scoring.py`) — sanity-checked against the real synthetic dataset: top 5 by `risk_score` are exactly the 5 seeded high-tier sites, zero-deviation sites score 0
 - [x] Trend calculation implemented (site improving/worsening over trial timeline) — `src/risk_scoring/trend.py`, tercile comparison with calibrated noise threshold; verified 12/17 sites match `seed_trend_intent` (volatile detection is the known weak point at this sample size, documented in the module)
 - [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels
-- [ ] `POST /risk-score/site` endpoint live
-- [ ] `GET /risk-score/site/{site_id}` endpoint live
+- [x] `POST /risk-score/site` endpoint live (`src/risk_scoring/api.py`, standalone FastAPI service on port 8001; run with `uvicorn src.risk_scoring.api:app --reload --port 8001`) — manually verified against real dataset (200 + error cases)
+- [x] `GET /risk-score/site/{site_id}` endpoint live (same service) — also `GET /risk-score/ranking?protocol_id=...` per contract
 - [ ] Test case: clearly high-risk site
 - [ ] Test case: clearly low-risk site
 - [ ] Test case: edge case (few visits, one Major deviation) — confirms score isn't gameable by volume alone
-- [x] Output matches `RiskScore` object contract in `05_api_contracts.md` (field-for-field; not yet exposed over HTTP — see endpoint items above)
+- [x] Output matches `RiskScore` object contract in `05_api_contracts.md` (field-for-field, including the error convention `{"error": {"code", "message"}}` — verified 404/400 cases manually)
 - [ ] Built/tested against Track A's real output (not just mocked deviations) — currently built against `mock_deviations_from_seed` in `loaders.py`
 
 ---
