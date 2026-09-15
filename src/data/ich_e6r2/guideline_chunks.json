@@ -1,0 +1,90 @@
+[
+  {
+    "chunk_id": "ICH-E6R2-2-PRINCIPLES",
+    "source_type": "ich_paraphrase",
+    "ich_section": "2",
+    "title": "The Principles of ICH GCP",
+    "text": "Section 2 sets out the thirteen founding principles of ICH GCP. In summary: (2.1) trials must follow the ethical principles of the Declaration of Helsinki and be consistent with GCP and applicable regulations; (2.2) a trial's foreseeable risks must be weighed against its anticipated benefit, and it should only proceed if the anticipated benefits justify the risks; (2.3) the rights, safety, and well-being of trial subjects are the most important considerations and prevail over the interests of science and society; (2.4) available nonclinical and clinical information on an investigational product should adequately support the proposed trial; (2.5) trials should be scientifically sound and described in a clear, detailed protocol; (2.6) a trial should be conducted in compliance with the protocol that received prior institutional review board / independent ethics committee (IRB/IEC) approval; (2.7) medical care and medical decisions for subjects are always the responsibility of a qualified physician; (2.8) every individual involved in conducting a trial should be qualified by education, training, and experience; (2.9) freely given informed consent should be obtained from every subject before participation; (2.10) all trial information should be recorded, handled, and stored in a way that allows accurate reporting, interpretation, and verification; (2.11) confidentiality of records that could identify subjects should be protected; (2.12) investigational products should be manufactured, handled, and stored according to Good Manufacturing Practice and used according to the approved protocol; (2.13) systems with procedures assuring the quality of every aspect of the trial should be implemented (the risk-based quality management principle added in the R2 addendum).",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-4.5-PROTOCOL-COMPLIANCE",
+    "source_type": "ich_paraphrase",
+    "ich_section": "4.5",
+    "title": "Compliance with Protocol",
+    "text": "Section 4.5 (subsections 4.5.1-4.5.4) requires the investigator/institution to conduct the trial in compliance with the protocol agreed by the sponsor, and given approval by the IRB/IEC and the relevant regulatory authority(ies); the investigator/institution and the sponsor should sign the protocol, or an alternative document, to confirm this agreement. The investigator should not implement any deviation from, or change to, the protocol without prior sponsor agreement and prior IRB/IEC review and documented approval, except where necessary to eliminate an immediate hazard to trial subjects, or when the change involves only logistical or administrative aspects of the trial. Any deviation from the approved protocol must be documented and explained by the investigator or designee. Where a deviation is made to eliminate an immediate hazard, the investigator should report it to the sponsor and the IRB/IEC as soon as possible. This is the direct textual grounding for treating missed visits, late visits, and dosage or co-medication deviations as protocol deviations requiring documentation.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-4.6-INVESTIGATIONAL-PRODUCT",
+    "source_type": "ich_paraphrase",
+    "ich_section": "4.6",
+    "title": "Investigational Product(s)",
+    "text": "Section 4.6 makes the investigator/institution responsible for investigational product accountability at the trial site, and permits delegation of dispensing duties to an appropriate, qualified individual (e.g. a pharmacist) under the investigator's supervision. Records of the product's delivery, inventory, dosage administered to each subject, and any return or alternative disposal must be maintained, including dates, quantities, and subject-level dosing detail. The investigational product should be used only in accordance with the approved protocol -- i.e. at the dose and via the route specified -- and stored as specified by the sponsor and applicable regulatory requirements. A dose administered outside the protocol's specified range is therefore a deviation from this section, not merely a data-entry issue.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-4.8-INFORMED-CONSENT",
+    "source_type": "ich_paraphrase",
+    "ich_section": "4.8",
+    "title": "Informed Consent of Trial Subjects",
+    "text": "Section 4.8 requires the investigator to obtain and document each subject's freely given informed consent before any trial-related procedure is carried out, in compliance with applicable regulatory requirements and the ethical principles from the Declaration of Helsinki referenced in Section 2.9. The subject (or their legally acceptable representative) must be given adequate time and opportunity to ask questions, and the consent form must be signed and personally dated before participation. Consent documentation is treated as a fundamental, subject-rights-level requirement rather than a routine administrative step -- a missing or incomplete informed consent record at a baseline visit is a direct breach of this section.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-4.9-RECORDS-REPORTS",
+    "source_type": "ich_paraphrase",
+    "ich_section": "4.9",
+    "title": "Records and Reports",
+    "text": "Section 4.9 requires the investigator to ensure the accuracy, completeness, legibility, and timeliness of data reported to the sponsor in case report forms and all required progress and safety reports, and to keep source documents that support the reported data's integrity. Required procedures and assessments not completed and recorded at a visit represent a gap against this section, distinct in severity depending on whether the missing data affects a safety/efficacy endpoint (e.g. a missed blood draw or ECG) versus a purely administrative record (e.g. a missed routine vitals entry).",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-5.0-QUALITY-MANAGEMENT",
+    "source_type": "ich_paraphrase",
+    "ich_section": "5.0",
+    "title": "Quality Management (R2 Addendum)",
+    "text": "Section 5.0, added by the R2 addendum, requires the sponsor to implement a risk-based quality management system across all stages of the trial, focused on the activities essential to protecting subjects and ensuring the reliability of trial results (\"critical-to-quality\" factors). The sponsor should identify risks, evaluate them against existing controls, decide which risks to accept, and prioritize, mitigate, document, and communicate the rest -- reviewing and adapting the approach as the trial proceeds. This section is the ICH grounding for building a continuously updated, indicator-based site risk score rather than relying on a static end-of-trial audit, and for maintaining a documented corrective/preventive action process for deficiencies identified along the way.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-5.18-MONITORING",
+    "source_type": "ich_paraphrase",
+    "ich_section": "5.18",
+    "title": "Monitoring",
+    "text": "Section 5.18 describes the purposes of trial monitoring: verifying that the rights and well-being of subjects are protected; that reported trial data are accurate, complete, and verifiable against source documents; and that the trial is conducted in compliance with the approved protocol, its amendments, GCP, and applicable regulatory requirements. Monitors are expected to confirm that investigational product is supplied and used only within the protocol-specified population and dosing, that informed consent was obtained before any trial procedure, and that source documents and other trial records are accurate, complete, and kept up to date. This is the ICH basis for a risk-manager-facing dashboard that surfaces deviations and site-level risk on an ongoing basis rather than only at a scheduled monitoring visit.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-E6R2-5.20-NONCOMPLIANCE",
+    "source_type": "ich_paraphrase",
+    "ich_section": "5.20",
+    "title": "Noncompliance",
+    "text": "Section 5.20 (subsections 5.20.1-5.20.2) requires that noncompliance with the protocol, standard operating procedures, GCP, or applicable regulatory requirements -- by an investigator, institution, or a member of the sponsor's own staff -- lead to prompt action by the sponsor to secure compliance. Where monitoring or auditing identifies serious or persistent noncompliance, the sponsor should take further action, up to and including terminating that investigator's or institution's participation in the trial, with prompt notification to the relevant regulatory authorities where required. This is the direct ICH grounding for this system's CAPA report generator: every deviation obligates the sponsor to investigate root cause and document a corrective and preventive action, not merely to log the finding.",
+    "official_source_url": "https://www.ema.europa.eu/en/documents/scientific-guideline/ich-guideline-good-clinical-practice-e6r2-step-5-revision-2_en.pdf"
+  },
+  {
+    "chunk_id": "ICH-TAXONOMY-MAJOR",
+    "source_type": "internal_taxonomy",
+    "ich_section": null,
+    "title": "Severity Taxonomy - Major Deviations",
+    "text": "Internal classification note (not verbatim ICH text): a deviation is classified Major when it affects subject safety, rights, or well-being (Principle 2.3), or the reliability/integrity of trial data (Principle 2.10), such that it would meet the bar for the sponsor's escalated response under Section 5.20. In this trial's deviation types, Major covers: banned_comedication (direct safety risk from a prohibited co-medication interacting with the investigational product, grounded in Sections 4.5/4.6); dosage_out_of_range (direct safety/efficacy impact from a dose outside the protocol-approved range, Section 4.6); missed_visit at a dosing visit (the subject received no protocol-required intervention or safety assessment, Section 4.5); and missing_procedure for informed consent (a fundamental subject-rights failure, Section 4.8, Principle 2.9).",
+    "official_source_url": null
+  },
+  {
+    "chunk_id": "ICH-TAXONOMY-MINOR",
+    "source_type": "internal_taxonomy",
+    "ich_section": null,
+    "title": "Severity Taxonomy - Minor Deviations",
+    "text": "Internal classification note (not verbatim ICH text): a deviation is classified Minor when it represents real noncompliance with the protocol (Section 4.5) or the trial's record-keeping requirements (Section 4.9), but has limited direct impact on subject safety or the primary endpoint. In this trial's deviation types, Minor covers: late_visit where the subject was still seen, just outside the protocol-defined window (Section 3.1 of the protocol spec, grounded in ICH Section 4.5); missed_visit at a non-dosing, assessment-only visit; and missing_procedure for a required data-collection step other than vitals or informed consent (e.g. a blood draw, ECG, or imaging), which creates a gap in the safety/efficacy dataset (Section 4.9) without an acute safety event.",
+    "official_source_url": null
+  },
+  {
+    "chunk_id": "ICH-TAXONOMY-ADMINISTRATIVE",
+    "source_type": "internal_taxonomy",
+    "ich_section": null,
+    "title": "Severity Taxonomy - Administrative Deviations",
+    "text": "Internal classification note (not verbatim ICH text): a deviation is classified Administrative when it is a documentation or process lapse with no discernible safety or data-integrity impact -- for example, a visit that occurred only slightly outside its window, or routine vitals not recorded at a visit where more critical procedures were completed. These still must be logged per Sections 4.9 and 5.18 so the sponsor's quality management system (Section 5.0) retains a complete, auditable trial record, but they do not on their own indicate a risk to subject safety or trial validity.",
+    "official_source_url": null
+  }
+]

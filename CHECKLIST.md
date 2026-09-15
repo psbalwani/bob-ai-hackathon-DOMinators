@@ -62,7 +62,7 @@ This is the single source of truth for what's left before submission. It covers 
 - [x] Synthetic data generator built (`src/data/generate_synthetic_data.py`) — first priority, unblocks A/B/D
 - [ ] First dataset version (v1) generated and shipped to the team
 - [ ] Full-scale dataset generated (5,000+ visits / 200+ sites) for final integration test
-- [ ] ICH E6(R2) GCP guideline text curated/chunked for the vector store
+- [x] ICH E6(R2) GCP guideline text curated/chunked for the vector store (`src/data/ich_e6r2/guideline_chunks.json`, 11 chunks: 8 ICH-section paraphrases + 3 internal Major/Minor/Administrative taxonomy notes) -- content/chunking done; embedding into a live Chroma/FAISS index is still Track A's RAG layer to wire up
 - [ ] CAPA generator: retrieves relevant clause + deviation + site risk context (RAG)
 - [ ] CAPA generator drafts Root Cause / Corrective Action / Preventive Action / suggested owner & due date
 - [ ] `POST /capa/generate` endpoint live — exposed early for Track D

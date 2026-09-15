@@ -1,3 +1,7 @@
+See also [`ich_e6r2/`](ich_e6r2/README.md) for the curated ICH E6(R2) GCP
+guideline corpus (Track C, task 2) that grounds the RAG/citation layer
+alongside `protocol.json`'s `protocol_sections` below.
+
 # Synthetic Data Generator (Track C, hour 0-4)
 
 `generate_synthetic_data.py` produces the full synthetic dataset every other
