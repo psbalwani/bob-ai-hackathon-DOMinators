@@ -20,3 +20,4 @@ See `docs/03_team_division.md` for track ownership and `docs/05_api_contracts.md
 - Commits are authored and attributed to the human teammate driving the session only.
 - **Never push directly to `main` (or any shared branch).** Always work on a feature/track branch and open a pull request for a human teammate to review and merge.
 - Do not merge your own PR.
+- **Always check `main` for changes before starting new work, and always push your branch after finishing a unit of work.** Concretely: `git fetch origin` and diff/log against `origin/main` at the start of a session or task, fast-forward your local `main`, and merge/rebase it into your working branch if it has moved (another track's PR may have merged while you were working) — then push your branch immediately after every commit rather than batching pushes. This keeps a track's branch from silently drifting behind merged work from another track.
