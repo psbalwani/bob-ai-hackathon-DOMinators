@@ -28,8 +28,21 @@ _SYSTEM_PROMPT = (
 )
 
 
-def classify_late_visit_severity(*, extra_days: int, window_days: int, clause_text: str) -> str | None:
-    """Return "Minor" or "Administrative", or None to fall back to the rule default."""
+def classify_late_visit_severity(
+    *,
+    extra_days: int,
+    window_days: int,
+    clause_text: str,
+    retrieved_chunks: list = (),
+) -> str | None:
+    """Return "Minor" or "Administrative", or None to fall back to the rule default.
+
+    `retrieved_chunks` is the output of retrieval.retrieve_ich_grounding() --
+    the ICH E6(R2) guideline chunks severity.py retrieved for this case,
+    included in the prompt so the model's judgment (and the citation
+    severity.py records) is grounded in real retrieved text, not just the
+    protocol clause.
+    """
     api_key = os.environ.get("WATSONX_API_KEY")
     url = os.environ.get("WATSONX_URL")
     space_id = os.environ.get("WATSONX_SPACE_ID")
@@ -42,9 +55,11 @@ def classify_late_visit_severity(*, extra_days: int, window_days: int, clause_te
     except ImportError:
         return None
 
+    grounding = "\n\n".join(f"{c.citation}:\n{c.text}" for c in retrieved_chunks)
     user_prompt = (
         f"{clause_text}\n\n"
-        f"A clinical trial visit occurred {extra_days} extra day(s) beyond its "
+        + (f"{grounding}\n\n" if grounding else "")
+        + f"A clinical trial visit occurred {extra_days} extra day(s) beyond its "
         f"{window_days}-day allowed window. Classify this deviation's severity."
     )
 
