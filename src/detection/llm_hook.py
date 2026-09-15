@@ -7,16 +7,34 @@ is fully deterministic and never reaches this module.
 If WATSONX_API_KEY isn't set, or the SDK isn't installed, or the call fails
 for any reason, `classify_late_visit_severity` returns None and the caller
 falls back to its own deterministic default -- this module must never raise.
+
+Env vars (see src/.env.example):
+    WATSONX_API_KEY    (required)
+    WATSONX_URL        (required, e.g. https://eu-de.ml.cloud.ibm.com)
+    WATSONX_SPACE_ID   (preferred -- a deployment space with a WML instance
+                        attached) or WATSONX_PROJECT_ID (fallback; some
+                        projects aren't associated with a WML instance and
+                        will 403 -- see README for how to tell)
+    WATSONX_MODEL_ID   (default: ibm/granite-13b-instruct-v2)
 """
 
 from __future__ import annotations
 
 import os
 
+_SYSTEM_PROMPT = (
+    "You are a clinical trial compliance classifier. You must respond with "
+    "exactly one word: Minor or Administrative. No other text."
+)
+
 
 def classify_late_visit_severity(*, extra_days: int, window_days: int, clause_text: str) -> str | None:
     """Return "Minor" or "Administrative", or None to fall back to the rule default."""
-    if not os.environ.get("WATSONX_API_KEY"):
+    api_key = os.environ.get("WATSONX_API_KEY")
+    url = os.environ.get("WATSONX_URL")
+    space_id = os.environ.get("WATSONX_SPACE_ID")
+    project_id = os.environ.get("WATSONX_PROJECT_ID")
+    if not api_key or not url or not (space_id or project_id):
         return None
 
     try:
@@ -24,29 +42,32 @@ def classify_late_visit_severity(*, extra_days: int, window_days: int, clause_te
     except ImportError:
         return None
 
-    prompt = (
-        "A clinical trial visit occurred {extra_days} day(s) outside its "
-        "{window_days}-day allowed window. Per this protocol clause:\n"
-        "{clause_text}\n\n"
-        "Classify this deviation's severity as exactly one word: "
-        "Minor or Administrative."
-    ).format(extra_days=extra_days, window_days=window_days, clause_text=clause_text)
+    user_prompt = (
+        f"{clause_text}\n\n"
+        f"A clinical trial visit occurred {extra_days} extra day(s) beyond its "
+        f"{window_days}-day allowed window. Classify this deviation's severity."
+    )
 
     try:
         model = ModelInference(
-            model_id="ibm/granite-13b-instruct-v2",
-            project_id=os.environ.get("WATSONX_PROJECT_ID"),
-            credentials={
-                "url": os.environ.get("WATSONX_URL", "https://us-south.ml.cloud.ibm.com"),
-                "apikey": os.environ["WATSONX_API_KEY"],
-            },
+            model_id=os.environ.get("WATSONX_MODEL_ID", "ibm/granite-13b-instruct-v2"),
+            space_id=space_id,
+            project_id=None if space_id else project_id,
+            credentials={"url": url, "apikey": api_key},
         )
-        response = model.generate_text(prompt=prompt).strip()
+        response = model.chat(
+            messages=[
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            params={"max_tokens": 10, "temperature": 0},
+        )
+        text = response["choices"][0]["message"]["content"].strip()
     except Exception:
         return None
 
-    if "minor" in response.lower():
+    if "minor" in text.lower():
         return "Minor"
-    if "administrative" in response.lower():
+    if "administrative" in text.lower():
         return "Administrative"
     return None
