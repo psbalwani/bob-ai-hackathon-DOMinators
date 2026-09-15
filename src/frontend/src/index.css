@@ -16,11 +16,12 @@
   --color-muted: #667085;
   --color-muted-dark: #8b93a3;
 
-  /* Brand (distinct from risk semantics so nothing is ever ambiguous) */
-  --color-brand: #4338ca;
-  --color-brand-strong: #362eaa;
-  --color-brand-soft: #eef2ff;
-  --color-brand-soft-dark: #1e2247;
+  /* Brand -- clinical blue, distinct from risk semantics (red/amber/green)
+     so nothing is ever ambiguous */
+  --color-brand: #2563eb;
+  --color-brand-strong: #1d4ed8;
+  --color-brand-soft: #eff6ff;
+  --color-brand-soft-dark: #14264a;
 
   /* Risk semantics */
   --color-risk-high: #dc2626;
@@ -106,4 +107,28 @@ h3 {
   background: var(--color-border);
   border-radius: 999px;
   border: 2px solid var(--color-surface);
+}
+
+/* Page transition -- re-keyed per route in Layout.tsx so every navigation
+   (opening a site, a deviation, a CAPA report) settles in instead of
+   popping onto the screen. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-in {
+  animation: page-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in {
+    animation: none;
+  }
 }

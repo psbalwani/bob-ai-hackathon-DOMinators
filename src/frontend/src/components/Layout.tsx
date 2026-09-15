@@ -1,9 +1,11 @@
 import type { PropsWithChildren } from "react"
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 
 const NAV_ITEMS = [{ to: "/", label: "Trial Overview", icon: IconGrid }]
 
 export function Layout({ children }: PropsWithChildren) {
+  const location = useLocation()
+
   return (
     <div className="flex min-h-screen flex-col bg-surface text-ink lg:flex-row">
       <aside className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-5 py-4 lg:w-64 lg:flex-col lg:items-stretch lg:gap-7 lg:border-b-0 lg:border-r lg:py-6">
@@ -48,7 +50,11 @@ export function Layout({ children }: PropsWithChildren) {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-hidden">
+        <div key={location.pathname} className="animate-page-in">
+          {children}
+        </div>
+      </main>
     </div>
   )
 }
