@@ -63,6 +63,25 @@ class CapaReportRow(Base):
     evidence_citations = Column(JSON, nullable=False)
 
 
+class CapaReviewRow(Base):
+    """Human-in-the-loop review gate on a CapaReport, per Track D task list
+    ("wire the full pipeline... with a human review checkpoint before
+    anything is finalized" -- see submission.yaml's what_we_are_most_proud_of).
+
+    Deliberately a separate table rather than a column on CapaReportRow: the
+    review decision is a Track D dashboard-workflow concept layered on top of
+    Track C's report, not part of the CapaReport contract itself
+    (docs/04_data_schema.md section 5), so this doesn't touch that shape.
+    """
+
+    __tablename__ = "capa_reviews"
+
+    capa_id = Column(String, primary_key=True)
+    status = Column(String, nullable=False, default="pending_review")  # pending_review | approved | rejected
+    reviewer = Column(String, nullable=True)
+    reviewed_at = Column(String, nullable=True)
+
+
 class PipelineRunRow(Base):
     """One row per POST /pipeline/run, for dashboard summary + audit trail."""
 

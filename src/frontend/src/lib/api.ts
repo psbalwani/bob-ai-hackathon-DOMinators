@@ -53,4 +53,7 @@ export const api = {
 
   getCapaExportUrl: (capaId: string, format: "markdown" | "pdf" = "markdown") =>
     `${BASE_URL}/capa/${capaId}/export?format=${format}`,
+
+  reviewCapa: (capaId: string, decision: "approve" | "reject", reviewer?: string) =>
+    client.post(`/capa/${capaId}/review`, { decision, reviewer }).then((r) => r.data),
 }

@@ -10,12 +10,15 @@ from datetime import datetime, timezone
 from . import db
 
 if db.USING_DB:
-    from .models_db import CapaReportRow, DeviationRow, PipelineRunRow, SiteRiskScoreRow
+    from .models_db import CapaReportRow, CapaReviewRow, DeviationRow, PipelineRunRow, SiteRiskScoreRow
+
+VALID_REVIEW_STATUSES = {"pending_review", "approved", "rejected"}
 
 # In-memory fallback state, keyed the same way the DB tables would be.
 _mem_deviations: dict[str, dict] = {}
 _mem_risk_scores: dict[str, dict] = {}  # keyed by site_id, latest wins
 _mem_capa_reports: dict[str, dict] = {}
+_mem_capa_reviews: dict[str, dict] = {}
 _mem_pipeline_runs: list[dict] = []
 _mem_capa_counter = 0
 
@@ -58,14 +61,47 @@ def save_risk_scores(scores: list[dict]) -> None:
 
 
 def save_capa_report(report) -> None:
-    """`report` is a src.capa.models.CapaReport dataclass."""
+    """`report` is a src.capa.models.CapaReport dataclass. Seeds a
+    pending_review row so every new report starts gated, not silently
+    finalized."""
     data = report.to_dict()
     if db.USING_DB:
         with db.SessionLocal() as session:
             session.merge(CapaReportRow(**data))
+            if session.get(CapaReviewRow, data["capa_id"]) is None:
+                session.add(CapaReviewRow(capa_id=data["capa_id"], status="pending_review"))
             session.commit()
         return
     _mem_capa_reports[data["capa_id"]] = data
+    _mem_capa_reviews.setdefault(
+        data["capa_id"], {"capa_id": data["capa_id"], "status": "pending_review", "reviewer": None, "reviewed_at": None}
+    )
+
+
+def get_capa_review(capa_id: str) -> dict:
+    if db.USING_DB:
+        with db.SessionLocal() as session:
+            row = session.get(CapaReviewRow, capa_id)
+            if row is None:
+                return {"capa_id": capa_id, "status": "pending_review", "reviewer": None, "reviewed_at": None}
+            return _row_to_dict(row)
+    return _mem_capa_reviews.get(
+        capa_id, {"capa_id": capa_id, "status": "pending_review", "reviewer": None, "reviewed_at": None}
+    )
+
+
+def set_capa_review(capa_id: str, status: str, reviewer: str | None) -> dict:
+    if status not in VALID_REVIEW_STATUSES:
+        raise ValueError(f"invalid review status: {status}")
+    reviewed_at = datetime.now(timezone.utc).isoformat()
+    review = {"capa_id": capa_id, "status": status, "reviewer": reviewer, "reviewed_at": reviewed_at}
+    if db.USING_DB:
+        with db.SessionLocal() as session:
+            session.merge(CapaReviewRow(**review))
+            session.commit()
+        return review
+    _mem_capa_reviews[capa_id] = review
+    return review
 
 
 def save_pipeline_run(protocol_id: str, sites_processed: int, deviations_found: int, capa_reports_generated: int) -> None:
