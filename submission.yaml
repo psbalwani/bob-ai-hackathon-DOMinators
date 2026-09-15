@@ -9,51 +9,63 @@
 # =============================================================================
 
 team:
-  name: ""                             # REQUIRED — e.g., "Orion Squad"
-  track: ""                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  name: "DOMinators"                             # REQUIRED — e.g., "Orion Squad"
+  track: "AI"                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
   lead:
-    name: ""                           # REQUIRED — e.g., "Alice Chen"
-    email: ""                          # REQUIRED — e.g., "alice.chen@ibm.com"
+    name: "Priyansh Balwani"                           # REQUIRED — e.g., "Alice Chen"
+    email: "psbalwani@gmail.com"                          # REQUIRED — e.g., "alice.chen@ibm.com"
   members:
-    - name: ""                         # REQUIRED — Team member 1
-      email: ""
-    - name: ""                         # Add more members by copying the two lines above
-      email: ""
-    - name: ""
-      email: ""
+    - name: "Arya Kayastha"                         # REQUIRED — Team member 1
+      email: "kayasthaarya@gmail.com"
+    - name: "Nancy Vaghela"                         # Add more members by copying the two lines above
+      email: "nancysvaghela@gmail.com"
+    - name: "Jay Changani"
+      email: "jaychangani2005@gmail.com"
 
 submission:
-  title: ""                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
+  title: "ClinIQ"                            # REQUIRED — Project display name, e.g., "SmartOps Dashboard"
 
   problem_statement: >                 # REQUIRED — 1-3 sentences. What problem? Who has it?
-    Replace this text with a concise description of the real-world problem
-    your project addresses and who experiences it.
+    Major clinical trials run 5,000+ patient visits across 200+ sites, making
+    it impossible for risk managers to manually catch protocol deviations —
+    missed visits, wrong dosing, banned co-medications — before an FDA audit.
+    A single rejected submission delays drug approval by 6-12 months and
+    costs $50-100M, yet today's calendar-driven monitoring gives no real-time
+    visibility into which sites are highest risk.
 
   solution_summary: >                  # REQUIRED — 1-3 sentences. What did you build?
-    Replace this text with a clear description of your solution
-    and how it addresses the problem above.
+    ClinIQ is a Bob-orchestrated multi-agent pipeline that compares patient
+    records against the protocol specification to detect deviations,
+    classifies each by severity under ICH E6 GCP (major/minor/administrative),
+    scores site-level risk from leading indicators, and generates CAPA-ready
+    mitigation reports for a risk manager to review before they're finalized.
 
   key_features:                        # REQUIRED — List 3 to 5 specific features you implemented
-    - ""                               # e.g., "Real-time pipeline anomaly detection using watsonx.ai"
-    - ""
-    - ""
-    - ""                               # optional 4th
-    - ""                               # optional 5th
+    - "Protocol spec parser that extracts visit windows, dosing rules, and banned co-medications into structured constraints"                               # e.g., "Real-time pipeline anomaly detection using watsonx.ai"
+    - "Deviation detection agent that diffs patient visit records against those constraints in near real time"
+    - "ICH E6 GCP severity classifier (major/minor/administrative) for every detected deviation"
+    - "Site-level risk scoring engine combining deviation history with leading indicators (enrollment velocity, deviation trend)"                               # optional 4th
+    - "CAPA-ready report generator with recommended corrective/preventive actions, plus a human-in-the-loop review gate"                               # optional 5th
 
   tech_stack:
-    languages: []                      # REQUIRED — e.g., ["Python", "TypeScript"]
-    frameworks: []                     # e.g., ["FastAPI", "React"]
-    ibm_technologies: []               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
-    databases: []                      # e.g., ["PostgreSQL", "Redis"]
-    other: []                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
+    languages: ["Python", "TypeScript"]                      # REQUIRED — e.g., ["Python", "TypeScript"]
+    frameworks: ["FastAPI", "React"]                     # e.g., ["FastAPI", "React"]
+    ibm_technologies: ["IBM Bob"]               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
+    databases: ["PostgreSQL"]                      # e.g., ["PostgreSQL", "Redis"]
+    other: ["Docker"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
 
   what_we_are_most_proud_of: >         # Optional but recommended — guides judges to your best work
-    Replace with what aspect of the submission you consider strongest
-    and want judges to pay special attention to.
+    The multi-agent handoff — deviation detection, severity classification,
+    risk scoring, and CAPA drafting run as distinct Bob-orchestrated agents
+    with a human review checkpoint before anything is finalized, mirroring
+    how a real GCP compliance workflow would need audit-grade traceability.
 
   known_limitations: >                 # Optional but recommended — be honest about gaps
-    Replace with any known limitations, incomplete features,
-    or shortcuts taken due to time constraints.
+    Built and tested against a synthetic patient/protocol dataset rather than
+    a real EDC feed. Severity classification currently relies on rule-based
+    logic mapped to ICH E6(R2)-era deviation categories rather than a
+    fully validated GCP taxonomy, and site risk scoring uses a limited set
+    of leading indicators due to hackathon time constraints.
 
 # =============================================================================
 # ARTIFACT LOCATIONS
