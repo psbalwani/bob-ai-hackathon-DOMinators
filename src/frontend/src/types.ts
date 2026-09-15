@@ -67,6 +67,8 @@ export interface VisitRecord {
   procedures_completed: string[]
 }
 
+export type ReviewStatus = "pending_review" | "approved" | "rejected"
+
 export interface CapaReport {
   capa_id: string
   scope: "deviation" | "site"
@@ -79,6 +81,9 @@ export interface CapaReport {
   suggested_due_window_days: number
   generated_at: string
   evidence_citations: string[]
+  review_status: ReviewStatus
+  reviewer: string | null
+  reviewed_at: string | null
 }
 
 export interface DashboardSummary {

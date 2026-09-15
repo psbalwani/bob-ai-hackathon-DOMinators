@@ -206,7 +206,11 @@ def get_deviation_detail(deviation_id: str) -> dict:
 def get_site_capa_reports(site_id: str) -> dict:
     _require_site(site_id)
     reports = [r for r in persistence.get_all_capa_reports() if r["site_id"] == site_id]
-    return {"capa_reports": reports}
+    enriched = []
+    for r in reports:
+        review = persistence.get_capa_review(r["capa_id"])
+        enriched.append({**r, "review_status": review["status"], "reviewer": review["reviewer"], "reviewed_at": review["reviewed_at"]})
+    return {"capa_reports": enriched}
 
 
 # ---------------------------------------------------------------------------
@@ -327,7 +331,27 @@ def get_capa(capa_id: str) -> dict:
     report = persistence.get_capa_report(capa_id)
     if report is None:
         raise ApiError(404, "NOT_FOUND", f"capa_id '{capa_id}' not found")
-    return report
+    review = persistence.get_capa_review(capa_id)
+    return {**report, "review_status": review["status"], "reviewer": review["reviewer"], "reviewed_at": review["reviewed_at"]}
+
+
+class CapaReviewRequest(BaseModel):
+    decision: str  # "approve" | "reject"
+    reviewer: str | None = None
+
+
+@app.post("/capa/{capa_id}/review")
+def post_capa_review(capa_id: str, body: CapaReviewRequest) -> dict:
+    """Human-in-the-loop review gate: a CAPA report is generated as
+    pending_review and must be explicitly approved here before it can be
+    exported (see export_capa below) -- "finalized," per
+    submission.yaml's framing."""
+    if persistence.get_capa_report(capa_id) is None:
+        raise ApiError(404, "NOT_FOUND", f"capa_id '{capa_id}' not found")
+    if body.decision not in ("approve", "reject"):
+        raise ApiError(400, "VALIDATION_ERROR", "decision must be 'approve' or 'reject'")
+    status = "approved" if body.decision == "approve" else "rejected"
+    return persistence.set_capa_review(capa_id, status, body.reviewer)
 
 
 @app.get("/capa/{capa_id}/export")
@@ -335,6 +359,13 @@ def export_capa(capa_id: str, format: str = "markdown") -> PlainTextResponse:
     report_dict = persistence.get_capa_report(capa_id)
     if report_dict is None:
         raise ApiError(404, "NOT_FOUND", f"capa_id '{capa_id}' not found")
+    review = persistence.get_capa_review(capa_id)
+    if review["status"] != "approved":
+        raise ApiError(
+            403,
+            "NOT_APPROVED",
+            f"CAPA report '{capa_id}' must be approved (current status: {review['status']}) before it can be exported",
+        )
     from src.capa.models import CapaReport
 
     report = CapaReport(**report_dict)

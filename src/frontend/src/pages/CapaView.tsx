@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, client } from "../lib/api"
 import { Card, CardBody, CardHeader } from "../components/Card"
+import { ReviewBadge, REVIEW_LABELS } from "../components/ReviewBadge"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
 import type { CapaReport } from "../types"
 
@@ -17,14 +19,25 @@ function Section({ title, body }: { title: string; body: string }) {
 export function CapaView() {
   const { capaId = "" } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [reviewerName, setReviewerName] = useState("")
 
   const { data: capa, isLoading, isError } = useQuery<CapaReport>({
     queryKey: ["capa", capaId],
     queryFn: () => client.get<CapaReport>(`/capa/${capaId}`).then((r) => r.data),
   })
 
+  const reviewMutation = useMutation({
+    mutationFn: (decision: "approve" | "reject") =>
+      api.reviewCapa(capaId, decision, reviewerName.trim() || undefined),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["capa", capaId] }),
+  })
+
   if (isLoading) return <CenteredSpinner />
   if (isError || !capa) return <ErrorState message={`Couldn't load CAPA report '${capaId}'.`} />
+
+  const isApproved = capa.review_status === "approved"
+  const isPending = capa.review_status === "pending_review"
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -37,20 +50,87 @@ export function CapaView() {
 
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">CAPA Report</h1>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">CAPA Report</h1>
+            <ReviewBadge status={capa.review_status} />
+          </div>
           <p className="mt-1 text-sm text-muted">
             {capa.capa_id} · {capa.site_id} · Generated {new Date(capa.generated_at).toLocaleDateString()}
+            {capa.reviewer && capa.reviewed_at && (
+              <>
+                {" "}
+                · {REVIEW_LABELS[capa.review_status].toLowerCase()} by {capa.reviewer} on{" "}
+                {new Date(capa.reviewed_at).toLocaleDateString()}
+              </>
+            )}
           </p>
         </div>
-        <a
-          href={api.getCapaExportUrl(capa.capa_id, "markdown")}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-        >
-          Export Markdown
-        </a>
+
+        {isApproved ? (
+          <a
+            href={api.getCapaExportUrl(capa.capa_id, "markdown")}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Export Markdown
+          </a>
+        ) : (
+          <span
+            title="This report must be approved before it can be exported"
+            className="inline-flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted"
+          >
+            Export requires approval
+          </span>
+        )}
       </header>
+
+      {isPending && (
+        <Card className="mb-4 border-risk-medium/30">
+          <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-sm font-medium text-ink">Review this report before it's finalized</div>
+              <div className="text-xs text-muted">
+                A human reviewer must approve a CAPA report before it can be exported or sent to a site.
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                value={reviewerName}
+                onChange={(e) => setReviewerName(e.target.value)}
+                placeholder="Your name (optional)"
+                className="w-40 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+              <button
+                onClick={() => reviewMutation.mutate("reject")}
+                disabled={reviewMutation.isPending}
+                className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-surface disabled:opacity-50"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => reviewMutation.mutate("approve")}
+                disabled={reviewMutation.isPending}
+                className="rounded-lg bg-risk-low px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                Approve
+              </button>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {!isPending && (
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => reviewMutation.mutate(isApproved ? "reject" : "approve")}
+            disabled={reviewMutation.isPending}
+            className="text-xs font-medium text-muted underline decoration-dotted hover:text-ink disabled:opacity-50"
+          >
+            {isApproved ? "Revoke approval" : "Reconsider — mark as approved instead"}
+          </button>
+        </div>
+      )}
 
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Card>

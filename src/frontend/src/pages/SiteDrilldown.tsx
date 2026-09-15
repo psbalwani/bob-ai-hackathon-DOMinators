@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../lib/api"
 import { RiskBadge } from "../components/RiskBadge"
+import { ReviewBadge } from "../components/ReviewBadge"
 import { TrendTag } from "../components/TrendTag"
 import { Card, CardBody, CardHeader } from "../components/Card"
 import { IndicatorBreakdownChart } from "../components/IndicatorBreakdownChart"
@@ -156,9 +157,12 @@ export function SiteDrilldown() {
                 <div className="text-sm font-medium text-ink">{c.capa_id}</div>
                 <div className="mt-0.5 truncate text-xs text-muted">{c.root_cause}</div>
               </div>
-              <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand">
-                Due in {c.suggested_due_window_days}d
-              </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand">
+                  Due in {c.suggested_due_window_days}d
+                </span>
+                <ReviewBadge status={c.review_status} />
+              </div>
             </Link>
           ))}
           {capaQuery.data?.length === 0 && (
