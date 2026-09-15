@@ -60,14 +60,14 @@ This is the single source of truth for what's left before submission. It covers 
 ## Track C — Data Engineering + CAPA Report Generation (Owner: Data/AI #3)
 
 - [x] Synthetic data generator built (`src/data/generate_synthetic_data.py`) — first priority, unblocks A/B/D
-- [ ] First dataset version (v1) generated and shipped to the team
-- [ ] Full-scale dataset generated (5,000+ visits / 200+ sites) for final integration test
+- [x] First dataset version (v1) generated and shipped to the team — `data/synthetic/` (18 sites, 289 patients, 2,023 visits, 52 seeded deviations, seed=42); Tracks A/B/C tests all run against it live
+- [x] Full-scale dataset generated (5,000+ visits / 200+ sites) for final integration test — `--num-sites` flag added; validated at 220 sites / 3,730 patients / 26,110 visits / 658 deviations (~3s to generate); full A→B→C pipeline run against it: detection 0.35s, ranking 0.68s (59/61 top-risk sites = seed-tier-high, all seed-tier-low sites scored 0), CAPA gen <10ms per site -- see `src/data/README.md` "Full-scale dataset" section for the exact command and numbers
 - [x] ICH E6(R2) GCP guideline text curated/chunked for the vector store (`src/data/ich_e6r2/guideline_chunks.json`, 11 chunks: 8 ICH-section paraphrases + 3 internal Major/Minor/Administrative taxonomy notes) -- content/chunking done; embedding into a live Chroma/FAISS index is still Track A's RAG layer to wire up
-- [ ] CAPA generator: retrieves relevant clause + deviation + site risk context (RAG)
-- [ ] CAPA generator drafts Root Cause / Corrective Action / Preventive Action / suggested owner & due date
-- [ ] `POST /capa/generate` endpoint live — exposed early for Track D
-- [ ] Test cases confirming generated CAPA cites real evidence and does not hallucinate a protocol clause
-- [ ] Output matches `CapaReport` object contract in `05_api_contracts.md`
+- [x] CAPA generator: retrieves relevant clause + deviation + site risk context (RAG) — `src/capa/corpus.py` (deterministic `(type, severity) -> chunk_id` retrieval over the ICH corpus, corpus-verified) + `src/capa/generator.py`; site risk score itself deliberately not folded into report content -- see `src/capa/DESIGN.md` "What's intentionally out of scope"
+- [x] CAPA generator drafts Root Cause / Corrective Action / Preventive Action / suggested owner & due date — `src/capa/templates.py` (deterministic, always available) + `src/capa/llm_hook.py` (optional watsonx.ai refinement of prose only, same fail-safe contract as Track A's hook)
+- [x] `POST /capa/generate` endpoint live — exposed early for Track D (`src/capa/api.py`; run with `python -m uvicorn src.capa.api:app --reload --port 8003`); also `GET /capa/{capa_id}` and `GET /capa/{capa_id}/export?format=pdf|markdown` per contract (markdown always works; PDF needs optional `fpdf2`)
+- [x] Test cases confirming generated CAPA cites real evidence and does not hallucinate a protocol clause — `tests/test_capa.py::test_evidence_citations_never_hallucinate` (every citation checked against real deviation ids / real protocol clauses / real ICH corpus chunks) + 16 more covering contract shape, clustering, severity-driven owner/due-window, and the API; 17/17 pass
+- [x] Output matches `CapaReport` object contract in `05_api_contracts.md` — field-for-field verified (`tests/test_capa.py::test_single_deviation_report_matches_contract_shape`)
 
 ---
 
@@ -89,7 +89,7 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Integration Checkpoints
 
-- [ ] **Hour 4:** Track C's v1 synthetic dataset shipped
+- [x] **Hour 4:** Track C's v1 synthetic dataset shipped — `data/synthetic/` (see Track C section above)
 - [ ] **Hour 20–24 (First Integration):** every track's endpoint live (even rough); Track D wires full pipeline end-to-end; interface mismatches fixed immediately
 - [ ] **Hour 24–36:** hardening pass — deepen models, add explainability detail, polish UI, expand tests
 - [ ] **Hour 36–42 (Final Integration):** full pipeline test at 5,000+ visits / 200+ sites scale, bug bash, performance pass
