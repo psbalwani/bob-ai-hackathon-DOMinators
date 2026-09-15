@@ -109,9 +109,11 @@ class DetectRequest(BaseModel):
 @app.post("/deviations/detect")
 def detect(req: DetectRequest):
     if _protocol is None:
+        # BUG-06: use the actual SYNTHETIC_DIR so the message stays correct when
+        # DETECTION_DATA_DIR env var is overridden (not always "data/synthetic/").
         raise HTTPException(
             status_code=404,
-            detail={"code": "NOT_FOUND", "message": "no dataset loaded (data/synthetic/ missing)"},
+            detail={"code": "NOT_FOUND", "message": f"no dataset loaded ({SYNTHETIC_DIR}/ missing)"},
         )
     if req.protocol_id != _protocol["protocol_id"]:
         raise HTTPException(

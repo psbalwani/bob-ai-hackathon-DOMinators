@@ -22,7 +22,12 @@ class Finding:
 
 
 def _visit_def(protocol: dict, visit_id: str) -> dict:
-    return next(v for v in protocol["visit_schedule"] if v["visit_id"] == visit_id)
+    # BUG-02: bare next() raises StopIteration (propagates as RuntimeError from generators
+    # in Python 3.7+) on unknown visit_id; use a default of None and raise explicitly.
+    visit = next((v for v in protocol["visit_schedule"] if v["visit_id"] == visit_id), None)
+    if visit is None:
+        raise ValueError(f"visit_id {visit_id!r} not found in protocol visit_schedule")
+    return visit
 
 
 def _is_dosing_visit(visit: dict) -> bool:
@@ -46,7 +51,12 @@ def check_late_visit(protocol: dict, record: dict) -> list[Finding]:
     window = visit["window_days"]
     if -window <= delta_days <= window:
         return []
-    extra_days = abs(delta_days) - window
+    # BUG-03: abs(delta_days) discards the sign, so early arrivals (negative delta)
+    # were incorrectly flagged as "late_visit". Only flag when the visit is actually late
+    # (positive delta beyond the window); early visits are not a late-visit deviation.
+    if delta_days < 0:
+        return []
+    extra_days = delta_days - window
     return [Finding("late_visit", {"extra_days": extra_days, "window_days": window})]
 
 
@@ -73,7 +83,9 @@ def check_missing_procedure(protocol: dict, record: dict) -> list[Finding]:
         return []  # already captured as a missed_visit; don't double-count
     visit = _visit_def(protocol, record["visit_id"])
     completed = set(record.get("procedures_completed", []))
-    missing = [p for p in visit["required_procedures"] if p not in completed]
+    # BUG-09: visit defs that omit required_procedures raised a bare KeyError;
+    # default to an empty list so the check simply produces no findings.
+    missing = [p for p in visit.get("required_procedures", []) if p not in completed]
     return [Finding("missing_procedure", {"procedure": p}) for p in missing]
 
 

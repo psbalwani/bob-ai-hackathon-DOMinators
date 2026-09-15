@@ -1,6 +1,7 @@
 """FastAPI TestClient tests for the Track A endpoints (05_api_contracts.md)."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -29,10 +30,15 @@ DEVIATION_FIELDS = {
 }
 
 
-@pytest.fixture()
+# BUG-11: module-scope fixture so the lifespan + full detection run happens once
+# for the entire test session instead of 5 times (one per function-scope fixture).
+# BUG-10: patch classify_late_visit_severity to return None (the "no credentials"
+# fallback) so tests never make live watsonx.ai calls and never burn token quota.
+@pytest.fixture(scope="module")
 def client():
-    with TestClient(app) as c:
-        yield c
+    with patch("src.detection.llm_hook.classify_late_visit_severity", return_value=None):
+        with TestClient(app) as c:
+            yield c
 
 
 def test_detect_returns_deviation_shaped_objects(client):

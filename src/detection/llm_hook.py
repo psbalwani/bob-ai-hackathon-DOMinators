@@ -51,6 +51,7 @@ def classify_late_visit_severity(
         return None
 
     try:
+        from ibm_watsonx_ai import Credentials  # type: ignore
         from ibm_watsonx_ai.foundation_models import ModelInference  # type: ignore
     except ImportError:
         return None
@@ -64,11 +65,13 @@ def classify_late_visit_severity(
     )
 
     try:
+        # BUG-12: credentials={} dict is deprecated; use the ibm_watsonx_ai.Credentials
+        # object to silence the 110+ WatsonxAPIWarning messages emitted per run.
         model = ModelInference(
             model_id=os.environ.get("WATSONX_MODEL_ID", "ibm/granite-13b-instruct-v2"),
             space_id=space_id,
             project_id=None if space_id else project_id,
-            credentials={"url": url, "apikey": api_key},
+            credentials=Credentials(url=url, api_key=api_key),
         )
         response = model.chat(
             messages=[

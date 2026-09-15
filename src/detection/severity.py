@@ -24,6 +24,7 @@ CLAUSE_SECTION_FOR_TYPE = {
     "dosage_out_of_range": "4.1",
     "banned_comedication": "4.2",
     "missing_procedure": "5.1",
+    "other": "3.1",  # BUG-01: fallback section for the generic "other" deviation type
 }
 
 # Deterministic missing_procedure severity by which procedure is missing.
@@ -67,10 +68,11 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
     if finding.type == "late_visit":
         extra_days = finding.context["extra_days"]
         retrieved_chunks = []
+        # BUG-08: use a distinct local name to avoid shadowing the imported `severity` module
         if extra_days <= _LATE_VISIT_ADMIN_MAX_EXTRA_DAYS:
-            severity = "Administrative"
+            sev = "Administrative"
         elif extra_days >= _LATE_VISIT_MINOR_MIN_EXTRA_DAYS:
-            severity = "Minor"
+            sev = "Minor"
         else:
             # The genuinely ambiguous band: retrieve real ICH E6(R2) grounding
             # (local, deterministic, never raises) and hand it to the one
@@ -79,7 +81,7 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
                 retrieved_chunks = retrieval.retrieve_ich_grounding(_LATE_VISIT_AMBIGUOUS_QUERY)
             except Exception:
                 retrieved_chunks = []
-            severity = llm_hook.classify_late_visit_severity(
+            sev = llm_hook.classify_late_visit_severity(
                 extra_days=extra_days,
                 window_days=finding.context.get("window_days", 0),
                 clause_text=clause_text,
@@ -88,13 +90,13 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
         rationale = (
             "Visit occurred outside the allowed window; documentation lapse "
             "only, no discernible safety or data impact."
-            if severity == "Administrative"
+            if sev == "Administrative"
             else "Visit occurred outside the allowed window; no immediate "
             "safety impact but the deviation must be documented per Section 3.1."
         )
         if retrieved_chunks:
             rationale += " ICH grounding retrieved: " + ", ".join(c.citation for c in retrieved_chunks) + "."
-        return severity, rationale, clause_ref
+        return sev, rationale, clause_ref
 
     if finding.type == "dosage_out_of_range":
         return (
@@ -115,13 +117,14 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
 
     if finding.type == "missing_procedure":
         procedure = finding.context["procedure"]
-        severity = _MISSING_PROCEDURE_SEVERITY.get(procedure, _MISSING_PROCEDURE_DEFAULT_SEVERITY)
-        if severity == "Major":
+        # BUG-08: use `sev` to avoid shadowing the imported `severity` module
+        sev = _MISSING_PROCEDURE_SEVERITY.get(procedure, _MISSING_PROCEDURE_DEFAULT_SEVERITY)
+        if sev == "Major":
             rationale = (
                 "Informed consent procedure is missing for the visit; a "
                 "fundamental GCP/subject-rights requirement was not met."
             )
-        elif severity == "Administrative":
+        elif sev == "Administrative":
             rationale = (
                 "Routine vitals were not recorded at this visit; a "
                 "documentation gap with no material safety or efficacy impact."
@@ -131,6 +134,14 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
                 f"The required '{procedure}' procedure was not completed at "
                 "this visit, creating a gap in the safety/efficacy dataset."
             )
-        return severity, rationale, clause_ref
+        return sev, rationale, clause_ref
+
+    # BUG-01: handle the "other" generic deviation type
+    if finding.type == "other":
+        return (
+            "Minor",
+            "An unclassified deviation was recorded; review required.",
+            clause_ref,
+        )
 
     raise ValueError(f"Unknown finding type: {finding.type}")

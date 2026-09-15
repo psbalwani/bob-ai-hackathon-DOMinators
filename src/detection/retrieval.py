@@ -20,7 +20,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-GUIDELINE_CHUNKS_PATH = Path("src/data/ich_e6r2/guideline_chunks.json")
+# BUG-05: use __file__-relative path so the module works regardless of cwd
+# (e.g. inside Docker or when tests are run from a subdirectory).
+GUIDELINE_CHUNKS_PATH = Path(__file__).resolve().parent.parent / "data" / "ich_e6r2" / "guideline_chunks.json"
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -42,8 +44,15 @@ def _tokenize(text: str) -> list[str]:
     return _TOKEN_RE.findall(text.lower())
 
 
+# BUG-07: lru_cache on a function with a default arg produces two distinct cache
+# keys — one for calls with no argument (uses the default sentinel) and one for
+# calls that pass GUIDELINE_CHUNKS_PATH explicitly — so the file is re-read every
+# time the call pattern alternates.  Remove the parameter entirely: the module-level
+# constant is always the right path and callers that need a different path can call
+# json.loads() directly.
 @lru_cache(maxsize=1)
-def load_guideline_chunks(path: Path = GUIDELINE_CHUNKS_PATH) -> tuple[Chunk, ...]:
+def load_guideline_chunks() -> tuple[Chunk, ...]:
+    path = GUIDELINE_CHUNKS_PATH
     raw = json.loads(path.read_text(encoding="utf-8"))
     return tuple(
         Chunk(
@@ -122,7 +131,7 @@ def retrieve_ich_grounding(query: str, top_k: int = 2) -> list[Chunk]:
     missing/broken corpus degrades gracefully rather than blocking
     classification."""
     try:
-        chunks = load_guideline_chunks()
+        chunks = load_guideline_chunks()  # always uses GUIDELINE_CHUNKS_PATH (BUG-07 fix)
     except (OSError, json.JSONDecodeError, KeyError):
         return []
     index = TfidfIndex(chunks)
