@@ -43,7 +43,7 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Track B — Site-Level Risk Scoring (Owner: Data/AI #2) ⭐ my track
 
-- [ ] Leading indicators + weighting defined and documented (frequency, severity mix, recency, trend, repeat-offense rate) — this is a judging talking point, write the rationale down
+- [x] Leading indicators + weighting defined and documented (frequency, severity mix, recency, trend, repeat-offense rate) — this is a judging talking point, write the rationale down (`src/risk_scoring/DESIGN.md`)
 - [ ] Weighted scoring model implemented
 - [ ] Trend calculation implemented (site improving/worsening over trial timeline)
 - [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels
