@@ -28,16 +28,16 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Track A — Deviation Detection & Severity Classification (Owner: Data/AI #1)
 
-- [ ] Rule-based checks: visit window violations
-- [ ] Rule-based checks: dosage-out-of-range
-- [ ] Rule-based checks: banned co-medication present
-- [ ] Rule-based checks: missing required procedure
-- [ ] RAG layer over protocol text + ICH E6(R2) GCP guideline for ambiguous cases
-- [ ] Severity classifier (Major / Minor / Administrative) with rationale + clause citation per deviation
-- [ ] `POST /deviations/detect` endpoint live (FastAPI) — exposed early for Track D
-- [ ] 10–15 seeded test cases (known planted deviations) validating recall
-- [ ] Output matches `Deviation` object contract in `05_api_contracts.md`
-- [ ] **Definition of done:** protocol + visit records → complete, correctly-classified, cited deviation list against seeded test cases
+- [x] Rule-based checks: visit window violations (`src/detection/rules.py::check_late_visit`, `check_missed_visit`)
+- [x] Rule-based checks: dosage-out-of-range (`check_dosage_out_of_range`)
+- [x] Rule-based checks: banned co-medication present (`check_banned_comedication`)
+- [x] Rule-based checks: missing required procedure (`check_missing_procedure`)
+- [ ] RAG layer over protocol text + ICH E6(R2) GCP guideline for ambiguous cases — partial: `src/detection/llm_hook.py` grounds the one ambiguous case (late-visit severity boundary) by passing the exact matched protocol clause text directly to a live watsonx.ai chat call (verified working), but this is direct grounding, not retrieval — it does not yet embed/search Track C's curated corpus (`src/data/ich_e6r2/guideline_chunks.json`) via a vector store
+- [x] Severity classifier (Major / Minor / Administrative) with rationale + clause citation per deviation (`src/detection/severity.py`)
+- [x] `POST /deviations/detect` endpoint live (FastAPI) — exposed early for Track D (`src/detection/api.py`; run with `python -m uvicorn src.detection.api:app --reload --port 8001`); also `GET /deviations/site/{site_id}` per contract
+- [x] 10–15 seeded test cases (known planted deviations) validating recall — exceeded: scored against all 52 real seeded deviations in `data/synthetic/seeded_deviations_ground_truth.json` (`tests/test_detector_recall.py`), plus 17 constructed unit tests (`tests/test_rules.py`)
+- [x] Output matches `Deviation` object contract in `05_api_contracts.md` — field-for-field verified (`tests/test_api.py`), including the shared error convention
+- [x] **Definition of done:** protocol + visit records → complete, correctly-classified, cited deviation list against seeded test cases — 100% recall (52/52), 0 false positives, 96.2% severity agreement against ground truth, all verified live including the watsonx.ai path
 
 ---
 
