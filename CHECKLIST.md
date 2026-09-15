@@ -28,46 +28,46 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Track A — Deviation Detection & Severity Classification (Owner: Data/AI #1)
 
-- [ ] Rule-based checks: visit window violations
-- [ ] Rule-based checks: dosage-out-of-range
-- [ ] Rule-based checks: banned co-medication present
-- [ ] Rule-based checks: missing required procedure
-- [ ] RAG layer over protocol text + ICH E6(R2) GCP guideline for ambiguous cases
-- [ ] Severity classifier (Major / Minor / Administrative) with rationale + clause citation per deviation
-- [ ] `POST /deviations/detect` endpoint live (FastAPI) — exposed early for Track D
-- [ ] 10–15 seeded test cases (known planted deviations) validating recall
-- [ ] Output matches `Deviation` object contract in `05_api_contracts.md`
-- [ ] **Definition of done:** protocol + visit records → complete, correctly-classified, cited deviation list against seeded test cases
+- [x] Rule-based checks: visit window violations (`src/detection/rules.py::check_late_visit`, `check_missed_visit`)
+- [x] Rule-based checks: dosage-out-of-range (`check_dosage_out_of_range`)
+- [x] Rule-based checks: banned co-medication present (`check_banned_comedication`)
+- [x] Rule-based checks: missing required procedure (`check_missing_procedure`)
+- [x] RAG layer over protocol text + ICH E6(R2) GCP guideline for ambiguous cases — `src/detection/retrieval.py`: a local TF-IDF + cosine-similarity index (pure Python, no new dependency) over Track C's 11-chunk ICH E6(R2) corpus. For the one ambiguous case (late-visit severity boundary), it retrieves the relevant guideline chunks and both the protocol clause text and the retrieved chunks are passed to the live watsonx.ai chat call (`llm_hook.py`); the retrieved citations are also recorded in `severity_rationale`, satisfying FR9 (explainability). Verified: the retrieval query used in production retrieves exactly `ICH-TAXONOMY-MINOR`/`ICH-TAXONOMY-ADMINISTRATIVE` (`tests/test_retrieval.py`), and a live run against the full synthetic dataset shows real deviations citing that retrieved grounding in their rationale
+- [x] Severity classifier (Major / Minor / Administrative) with rationale + clause citation per deviation (`src/detection/severity.py`)
+- [x] `POST /deviations/detect` endpoint live (FastAPI) — exposed early for Track D (`src/detection/api.py`; run with `python -m uvicorn src.detection.api:app --reload --port 8001`); also `GET /deviations/site/{site_id}` per contract
+- [x] 10–15 seeded test cases (known planted deviations) validating recall — exceeded: scored against all 52 real seeded deviations in `data/synthetic/seeded_deviations_ground_truth.json` (`tests/test_detector_recall.py`), plus 17 constructed unit tests (`tests/test_rules.py`)
+- [x] Output matches `Deviation` object contract in `05_api_contracts.md` — field-for-field verified (`tests/test_api.py`), including the shared error convention
+- [x] **Definition of done:** protocol + visit records → complete, correctly-classified, cited deviation list against seeded test cases — 100% recall (52/52), 0 false positives, 96.2% severity agreement against ground truth, all verified live including the watsonx.ai path
 
 ---
 
 ## Track B — Site-Level Risk Scoring (Owner: Data/AI #2) ⭐ my track
 
 - [x] Leading indicators + weighting defined and documented (frequency, severity mix, recency, trend, repeat-offense rate) — this is a judging talking point, write the rationale down (`src/risk_scoring/DESIGN.md`)
-- [ ] Weighted scoring model implemented
-- [ ] Trend calculation implemented (site improving/worsening over trial timeline)
+- [x] Weighted scoring model implemented (`src/risk_scoring/indicators.py`, `scoring.py`) — sanity-checked against the real synthetic dataset: top 5 by `risk_score` are exactly the 5 seeded high-tier sites, zero-deviation sites score 0
+- [x] Trend calculation implemented (site improving/worsening over trial timeline) — `src/risk_scoring/trend.py`, tercile comparison with calibrated noise threshold; verified 12/17 sites match `seed_trend_intent` (volatile detection is the known weak point at this sample size, documented in the module)
 - [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels
-- [ ] `POST /risk-score/site` endpoint live
-- [ ] `GET /risk-score/site/{site_id}` endpoint live
-- [ ] Test case: clearly high-risk site
-- [ ] Test case: clearly low-risk site
-- [ ] Test case: edge case (few visits, one Major deviation) — confirms score isn't gameable by volume alone
-- [ ] Output matches `RiskScore` object contract in `05_api_contracts.md`
-- [ ] Built/tested against Track A's real output (not just mocked deviations)
+- [x] `POST /risk-score/site` endpoint live (`src/risk_scoring/api.py`, standalone FastAPI service on port 8001; run with `uvicorn src.risk_scoring.api:app --reload --port 8001`) — manually verified against real dataset (200 + error cases)
+- [x] `GET /risk-score/site/{site_id}` endpoint live (same service) — also `GET /risk-score/ranking?protocol_id=...` per contract
+- [x] Test case: clearly high-risk site (`tests/test_risk_scoring.py::test_clearly_high_risk_site` — every indicator saturated, `risk_score == 100`)
+- [x] Test case: clearly low-risk site (`test_clearly_low_risk_site`, plus `test_zero_deviations_is_low_not_gamed_the_other_way`)
+- [x] Test case: edge case (few visits, one Major deviation) — confirms score is rate-driven, not raw-count-driven (`test_one_major_deviation_scores_by_rate_not_raw_count`: identical single deviation scores 70/High at 2 visits vs 9/Low at 200 visits). All 4 tests pass.
+- [x] Output matches `RiskScore` object contract in `05_api_contracts.md` (field-for-field, including the error convention `{"error": {"code", "message"}}` — verified 404/400 cases manually)
+- [ ] Built/tested against Track A's real output (not just mocked deviations) — currently built against `mock_deviations_from_seed` in `loaders.py`
 
 ---
 
 ## Track C — Data Engineering + CAPA Report Generation (Owner: Data/AI #3)
 
 - [x] Synthetic data generator built (`src/data/generate_synthetic_data.py`) — first priority, unblocks A/B/D
-- [ ] First dataset version (v1) generated and shipped to the team
-- [ ] Full-scale dataset generated (5,000+ visits / 200+ sites) for final integration test
-- [ ] ICH E6(R2) GCP guideline text curated/chunked for the vector store
-- [ ] CAPA generator: retrieves relevant clause + deviation + site risk context (RAG)
-- [ ] CAPA generator drafts Root Cause / Corrective Action / Preventive Action / suggested owner & due date
-- [ ] `POST /capa/generate` endpoint live — exposed early for Track D
-- [ ] Test cases confirming generated CAPA cites real evidence and does not hallucinate a protocol clause
-- [ ] Output matches `CapaReport` object contract in `05_api_contracts.md`
+- [x] First dataset version (v1) generated and shipped to the team — `data/synthetic/` (18 sites, 289 patients, 2,023 visits, 52 seeded deviations, seed=42); Tracks A/B/C tests all run against it live
+- [x] Full-scale dataset generated (5,000+ visits / 200+ sites) for final integration test — `--num-sites` flag added; validated at 220 sites / 3,730 patients / 26,110 visits / 658 deviations (~3s to generate); full A→B→C pipeline run against it: detection 0.35s, ranking 0.68s (59/61 top-risk sites = seed-tier-high, all seed-tier-low sites scored 0), CAPA gen <10ms per site -- see `src/data/README.md` "Full-scale dataset" section for the exact command and numbers
+- [x] ICH E6(R2) GCP guideline text curated/chunked for the vector store (`src/data/ich_e6r2/guideline_chunks.json`, 11 chunks: 8 ICH-section paraphrases + 3 internal Major/Minor/Administrative taxonomy notes) -- content/chunking done; embedding into a live Chroma/FAISS index is still Track A's RAG layer to wire up
+- [x] CAPA generator: retrieves relevant clause + deviation + site risk context (RAG) — `src/capa/corpus.py` (deterministic `(type, severity) -> chunk_id` retrieval over the ICH corpus, corpus-verified) + `src/capa/generator.py`; site risk score itself deliberately not folded into report content -- see `src/capa/DESIGN.md` "What's intentionally out of scope"
+- [x] CAPA generator drafts Root Cause / Corrective Action / Preventive Action / suggested owner & due date — `src/capa/templates.py` (deterministic, always available) + `src/capa/llm_hook.py` (optional watsonx.ai refinement of prose only, same fail-safe contract as Track A's hook)
+- [x] `POST /capa/generate` endpoint live — exposed early for Track D (`src/capa/api.py`; run with `python -m uvicorn src.capa.api:app --reload --port 8003`); also `GET /capa/{capa_id}` and `GET /capa/{capa_id}/export?format=pdf|markdown` per contract (markdown always works; PDF needs optional `fpdf2`)
+- [x] Test cases confirming generated CAPA cites real evidence and does not hallucinate a protocol clause — `tests/test_capa.py::test_evidence_citations_never_hallucinate` (every citation checked against real deviation ids / real protocol clauses / real ICH corpus chunks) + 16 more covering contract shape, clustering, severity-driven owner/due-window, and the API; 17/17 pass
+- [x] Output matches `CapaReport` object contract in `05_api_contracts.md` — field-for-field verified (`tests/test_capa.py::test_single_deviation_report_matches_contract_shape`)
 
 ---
 
@@ -89,7 +89,7 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Integration Checkpoints
 
-- [ ] **Hour 4:** Track C's v1 synthetic dataset shipped
+- [x] **Hour 4:** Track C's v1 synthetic dataset shipped — `data/synthetic/` (see Track C section above)
 - [ ] **Hour 20–24 (First Integration):** every track's endpoint live (even rough); Track D wires full pipeline end-to-end; interface mismatches fixed immediately
 - [ ] **Hour 24–36:** hardening pass — deepen models, add explainability detail, polish UI, expand tests
 - [ ] **Hour 36–42 (Final Integration):** full pipeline test at 5,000+ visits / 200+ sites scale, bug bash, performance pass

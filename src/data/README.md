@@ -1,3 +1,7 @@
+See also [`ich_e6r2/`](ich_e6r2/README.md) for the curated ICH E6(R2) GCP
+guideline corpus (Track C, task 2) that grounds the RAG/citation layer
+alongside `protocol.json`'s `protocol_sections` below.
+
 # Synthetic Data Generator (Track C, hour 0-4)
 
 `generate_synthetic_data.py` produces the full synthetic dataset every other
@@ -49,3 +53,25 @@ Any regeneration is deterministic for a given `--seed`. If you change the
 default scale/counts, re-check `dataset_summary.md` to confirm the
 high/low-risk sites are still visibly distinct — that's the property the
 demo depends on.
+
+## Full-scale dataset (final integration / performance test)
+
+The default (`--num-sites 18`, the demo scale) is what everyone builds and
+tests against day-to-day. For the final integration test at the reference
+scale named in `docs/01_project_planning.md` ("5,000+ visits / 200+
+sites"), use `--num-sites`:
+
+```bash
+python src/data/generate_synthetic_data.py --num-sites 220 --min-patients-per-site 14 --max-patients-per-site 20 --output-dir data/synthetic_fullscale
+```
+
+High/low-risk tiers scale proportionally (same ~28%/28%/44% high/low/medium
+split as the default 18-site set), so the same risk story holds at any
+scale. Validated (2026-09-15, seed=42): 220 sites, 3,730 patients, 26,110
+visit records, 658 seeded deviations, generated in ~3s. Running the full
+pipeline against it: Track A's detector found all 658 in 0.35s, Track B
+ranked all 220 sites in 0.68s with 59/61 (96.7%) of the top-risk-scored
+sites landing exactly on the seed-tier-`high` sites (every seed-tier-`low`
+site scored 0), and Track C's CAPA generator produced a report for the
+busiest site in under 10ms. No noticeable lag at reference scale, per the
+performance non-functional requirement.

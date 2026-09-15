@@ -7,6 +7,11 @@ httpx>=0.27
 pytest>=8.3
 python-dotenv>=1.0
 
-# Only imported lazily by src/detection/llm_hook.py when WATSONX_API_KEY is
-# set; the hook falls back gracefully if this isn't installed.
+# Only imported lazily by src/detection/llm_hook.py and src/capa/llm_hook.py
+# when WATSONX_API_KEY is set; both hooks fall back gracefully if this isn't
+# installed.
 ibm-watsonx-ai>=1.1
+
+# Only imported lazily by src/capa/export.py for PDF export; markdown export
+# (the reliable demo path) works without it.
+fpdf2>=2.7

@@ -175,6 +175,13 @@ N_HIGH_RISK = 5
 N_LOW_RISK = 5
 # remaining sites are "medium" risk tier
 
+# Fraction of sites that are high/low risk, applied when --num-sites scales
+# the site count up (e.g. for the 200+-site reference-scale dataset) so the
+# same "a handful of sites are clearly bad, a handful are clearly good"
+# story holds at any scale -- see docs/04_data_schema.md section 6.
+HIGH_RISK_FRACTION = N_HIGH_RISK / N_SITES
+LOW_RISK_FRACTION = N_LOW_RISK / N_SITES
+
 # --------------------------------------------------------------------------
 # Data classes (mirror docs/04_data_schema.md exactly for the frozen fields)
 # --------------------------------------------------------------------------
@@ -301,16 +308,26 @@ CLAUSE_FOR_TYPE = {
 # --------------------------------------------------------------------------
 
 
-def build_sites(rng: random.Random) -> list[Site]:
+def build_sites(rng: random.Random, num_sites: int = N_SITES) -> list[Site]:
+    if num_sites == N_SITES:
+        n_high, n_low = N_HIGH_RISK, N_LOW_RISK
+    else:
+        n_high = max(1, round(num_sites * HIGH_RISK_FRACTION))
+        n_low = max(1, round(num_sites * LOW_RISK_FRACTION))
+        # leave at least one "medium" site once num_sites is large enough to
+        # have one; for a tiny num_sites just cap high/low so they still fit
+        n_high = min(n_high, num_sites)
+        n_low = min(n_low, num_sites - n_high)
+
     sites: list[Site] = []
     tiers = (
-        ["high"] * N_HIGH_RISK
-        + ["low"] * N_LOW_RISK
-        + ["medium"] * (N_SITES - N_HIGH_RISK - N_LOW_RISK)
+        ["high"] * n_high
+        + ["low"] * n_low
+        + ["medium"] * (num_sites - n_high - n_low)
     )
     rng.shuffle(tiers)
 
-    for i in range(1, N_SITES + 1):
+    for i in range(1, num_sites + 1):
         site_id = f"SITE-{i:03d}"
         country, base_name = REGIONS[(i - 1) % len(REGIONS)]
         tier = tiers[i - 1]
@@ -684,6 +701,12 @@ def main() -> None:
         "--output-dir", type=Path, default=Path("data/synthetic"),
         help="Output directory (default: data/synthetic)",
     )
+    parser.add_argument(
+        "--num-sites", type=int, default=N_SITES,
+        help=f"Number of sites (default: {N_SITES}, demo scale). Use e.g. 220 for the "
+             "5,000+ visits / 200+ sites reference scale named in docs/01_project_planning.md "
+             "-- high/low risk tiers scale proportionally so the same risk story still holds.",
+    )
     parser.add_argument("--min-patients-per-site", type=int, default=12)
     parser.add_argument("--max-patients-per-site", type=int, default=20)
     args = parser.parse_args()
@@ -692,7 +715,7 @@ def main() -> None:
     out_dir: Path = args.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    sites = build_sites(rng)
+    sites = build_sites(rng, args.num_sites)
     patients = build_patients(rng, sites, args.min_patients_per_site, args.max_patients_per_site)
     records = build_clean_visit_records(rng, patients)
     deviations = inject_deviations(
