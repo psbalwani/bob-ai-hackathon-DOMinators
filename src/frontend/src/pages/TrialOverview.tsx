@@ -91,15 +91,18 @@ export function TrialOverview() {
             placeholder="Search sites…"
             className="w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand sm:w-56"
           />
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-ink focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          >
-            <option value="risk_score">Sort: Risk score</option>
-            <option value="site_name">Sort: Site name</option>
-            <option value="open_deviation_count">Sort: Open deviations</option>
-          </select>
+          <label className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-ink focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+            <span className="text-muted">Sort</span>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="bg-transparent text-sm text-ink focus:outline-none"
+            >
+              <option value="risk_score">Risk score</option>
+              <option value="site_name">Site name</option>
+              <option value="open_deviation_count">Open deviations</option>
+            </select>
+          </label>
         </div>
       </div>
 
