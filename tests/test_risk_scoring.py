@@ -1,7 +1,7 @@
 """Track B test cases, per docs/03_team_division.md Task 6:
 a clearly high-risk site, a clearly low-risk site, and the edge case
-(few visits, one Major deviation) that sanity-checks the score isn't
-gameable by volume alone.
+(few visits, one Major deviation) that sanity-checks the score is driven
+by rate, not raw deviation count.
 
 Fixtures are hand-built (not the generated data/synthetic dataset) so the
 expected numbers are exactly derivable and the tests don't depend on
@@ -99,9 +99,9 @@ def test_clearly_high_risk_site():
 
 def test_clearly_low_risk_site():
     """13 patients (52 visits), 2 unrelated Administrative deviations from
-    different patients at different, non-adjacent-in-time visits -- no
-    repeat offenders, low severity, and (for one of them) already aged out
-    of the recency window.
+    different patients at different visits (V1 and V2) -- no repeat
+    offenders, low severity, and (V1's deviation, being older relative to
+    the site's last visit) partly decayed out of the recency window.
     """
     site_id = "SITE-LOW"
     patients = [f"PT-{i}" for i in range(1, 14)]
@@ -135,13 +135,21 @@ def test_zero_deviations_is_low_not_gamed_the_other_way():
     assert all(v == 0.0 for v in result["indicator_breakdown"].values())
 
 
-def test_one_major_deviation_is_not_gameable_by_visit_volume():
-    """The edge case from docs/03_team_division.md: a tiny site with a
-    single Major deviation must be flagged, and a large site can't hide an
-    identical single Major deviation just by having many more visits --
-    both sites have open_deviation_count == 1, but risk_score must differ
-    sharply because the model rate-normalizes rather than counting raw
-    deviations.
+def test_one_major_deviation_scores_by_rate_not_raw_count():
+    """The edge case from docs/03_team_division.md: two sites with the
+    identical open_deviation_count == 1 must NOT get the same risk_score --
+    a raw-count-only model would either fail to flag the tiny site (since
+    "1" looks small) or wrongly flag the bulky site as equally risky (it
+    also has "1"), ignoring that it's 1-in-200 versus 1-in-2.
+
+    Rate-normalizing correctly pulls the scores apart in both directions:
+    a single Major deviation at a barely-visited site is a real signal and
+    must be flagged (not washed out just because the raw count is low),
+    while the identical single deviation diluted across 200 otherwise-clean
+    visits reflects a genuinely better track record and correctly scores
+    low. That dilution is the intended, correct behavior at 200 visits --
+    not a loophole -- which is exactly why the score must be driven by
+    rate, not raw count.
     """
     tiny_site = "SITE-TINY"
     tiny_visits = _patient_visits(tiny_site, "PT-1")[:2]  # only V1, V2 -> 2 total visits
@@ -165,5 +173,6 @@ def test_one_major_deviation_is_not_gameable_by_visit_volume():
     # A single Major deviation among only 2 visits is a real signal.
     assert tiny_result["risk_score"] >= 70
     assert tiny_result["risk_band"] == "High"
-    # The same single deviation, diluted across 200 visits, stays quiet.
+    # The same single deviation, spread across 200 otherwise-clean visits,
+    # correctly reflects a genuinely better track record.
     assert bulky_result["risk_band"] == "Low"

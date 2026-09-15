@@ -174,8 +174,8 @@ echoing the seed label, which is the intended behavior.
   convention) — hand-built fixtures (not the generated dataset, so expected
   numbers are exactly derivable): a clearly high-risk site (every indicator
   saturated -> `risk_score == 100`), a clearly low-risk site, the
-  zero-deviation edge case, and the volume-gaming edge case — a 2-visit
+  zero-deviation edge case, and the rate-vs-raw-count edge case — a 2-visit
   site and a 200-visit site each with exactly one identical Major
-  deviation score `70/High` vs `8/Low` respectively, proving the model
+  deviation score `70/High` vs `9/Low` respectively, proving the model
   rate-normalizes rather than counting raw deviations. All 4 pass
   (`pytest tests/test_risk_scoring.py -v`).

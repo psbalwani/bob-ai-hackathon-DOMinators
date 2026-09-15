@@ -51,7 +51,7 @@ This is the single source of truth for what's left before submission. It covers 
 - [x] `GET /risk-score/site/{site_id}` endpoint live (same service) — also `GET /risk-score/ranking?protocol_id=...` per contract
 - [x] Test case: clearly high-risk site (`tests/test_risk_scoring.py::test_clearly_high_risk_site` — every indicator saturated, `risk_score == 100`)
 - [x] Test case: clearly low-risk site (`test_clearly_low_risk_site`, plus `test_zero_deviations_is_low_not_gamed_the_other_way`)
-- [x] Test case: edge case (few visits, one Major deviation) — confirms score isn't gameable by volume alone (`test_one_major_deviation_is_not_gameable_by_visit_volume`: identical single deviation scores 70/High at 2 visits vs 8/Low at 200 visits). All 4 tests pass.
+- [x] Test case: edge case (few visits, one Major deviation) — confirms score is rate-driven, not raw-count-driven (`test_one_major_deviation_scores_by_rate_not_raw_count`: identical single deviation scores 70/High at 2 visits vs 9/Low at 200 visits). All 4 tests pass.
 - [x] Output matches `RiskScore` object contract in `05_api_contracts.md` (field-for-field, including the error convention `{"error": {"code", "message"}}` — verified 404/400 cases manually)
 - [ ] Built/tested against Track A's real output (not just mocked deviations) — currently built against `mock_deviations_from_seed` in `loaders.py`
 
