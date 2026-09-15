@@ -5,6 +5,8 @@ import { api, client } from "../lib/api"
 import { Card, CardBody, CardHeader } from "../components/Card"
 import { ReviewBadge, REVIEW_LABELS } from "../components/ReviewBadge"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
+import { Button } from "../components/Button"
+import { IconChevronLeft } from "../components/icons"
 import type { CapaReport } from "../types"
 
 function Section({ title, body }: { title: string; body: string }) {
@@ -43,9 +45,10 @@ export function CapaView() {
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <button
         onClick={() => navigate(`/sites/${capa.site_id}`)}
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
       >
-        ← {capa.site_id}
+        <IconChevronLeft className="h-3.5 w-3.5" />
+        {capa.site_id}
       </button>
 
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -71,7 +74,7 @@ export function CapaView() {
             href={api.getCapaExportUrl(capa.capa_id, "markdown")}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-strong"
           >
             Export Markdown
           </a>
@@ -86,7 +89,7 @@ export function CapaView() {
       </header>
 
       {isPending && (
-        <Card className="mb-4 border-risk-medium/30">
+        <Card className="mb-4 border-risk-medium/30 bg-risk-medium-soft/40">
           <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-sm font-medium text-ink">Review this report before it's finalized</div>
@@ -101,20 +104,17 @@ export function CapaView() {
                 placeholder="Your name (optional)"
                 className="w-40 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
-              <button
-                onClick={() => reviewMutation.mutate("reject")}
-                disabled={reviewMutation.isPending}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-surface disabled:opacity-50"
-              >
+              <Button size="sm" onClick={() => reviewMutation.mutate("reject")} disabled={reviewMutation.isPending}>
                 Reject
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="success"
                 onClick={() => reviewMutation.mutate("approve")}
                 disabled={reviewMutation.isPending}
-                className="rounded-lg bg-risk-low px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 Approve
-              </button>
+              </Button>
             </div>
           </CardBody>
         </Card>

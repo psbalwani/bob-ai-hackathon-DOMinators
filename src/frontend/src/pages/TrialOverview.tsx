@@ -6,6 +6,7 @@ import { RiskBadge } from "../components/RiskBadge"
 import { TrendTag } from "../components/TrendTag"
 import { StatTile } from "../components/StatTile"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
+import { IconAlertTriangle, IconBuilding, IconCalendar, IconFlag } from "../components/icons"
 import type { RiskBand, SiteSummary } from "../types"
 
 type SortKey = "risk_score" | "site_name" | "open_deviation_count"
@@ -50,10 +51,20 @@ export function TrialOverview() {
       </header>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label="Total Sites" value={summary.total_sites} />
-        <StatTile label="High-Risk Sites" value={summary.high_risk_sites} accent="high" />
-        <StatTile label="Open Deviations" value={summary.open_deviations} />
-        <StatTile label="Total Visits" value={summary.total_visits.toLocaleString()} />
+        <StatTile label="Total Sites" value={summary.total_sites} icon={<IconBuilding />} accent="brand" />
+        <StatTile
+          label="High-Risk Sites"
+          value={summary.high_risk_sites}
+          icon={<IconAlertTriangle />}
+          accent="high"
+        />
+        <StatTile label="Open Deviations" value={summary.open_deviations} icon={<IconFlag />} accent="brand" />
+        <StatTile
+          label="Total Visits"
+          value={summary.total_visits.toLocaleString()}
+          icon={<IconCalendar />}
+          accent="brand"
+        />
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -80,23 +91,26 @@ export function TrialOverview() {
             placeholder="Search sites…"
             className="w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand sm:w-56"
           />
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-ink focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          >
-            <option value="risk_score">Sort: Risk score</option>
-            <option value="site_name">Sort: Site name</option>
-            <option value="open_deviation_count">Sort: Open deviations</option>
-          </select>
+          <label className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-ink focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+            <span className="text-muted">Sort</span>
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="bg-transparent text-sm text-ink focus:outline-none"
+            >
+              <option value="risk_score">Risk score</option>
+              <option value="site_name">Site name</option>
+              <option value="open_deviation_count">Open deviations</option>
+            </select>
+          </label>
         </div>
       </div>
 
       {/* Table for sm+ screens -- a data-dense grid is the right shape once there's room for it. */}
-      <div className="hidden overflow-hidden rounded-card border border-border bg-card sm:block">
+      <div className="hidden overflow-hidden rounded-card border border-border bg-card shadow-card sm:block">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-xs font-medium uppercase tracking-wide text-muted">
+            <tr className="border-b border-border bg-surface/60 text-xs font-medium uppercase tracking-wide text-muted">
               <th className="px-5 py-3">Site</th>
               <th className="px-5 py-3">Risk score</th>
               <th className="px-5 py-3">Band</th>
@@ -109,10 +123,10 @@ export function TrialOverview() {
               <tr
                 key={site.site_id}
                 onClick={() => navigate(`/sites/${site.site_id}`)}
-                className="cursor-pointer border-b border-border last:border-0 transition-colors hover:bg-surface"
+                className="group cursor-pointer border-b border-border last:border-0 transition-colors hover:bg-brand-soft/40"
               >
                 <td className="px-5 py-3.5">
-                  <div className="font-medium text-ink">{site.site_id}</div>
+                  <div className="font-medium text-ink group-hover:text-brand">{site.site_id}</div>
                   <div className="text-xs text-muted">{site.site_name}</div>
                 </td>
                 <td className="px-5 py-3.5">
@@ -139,7 +153,7 @@ export function TrialOverview() {
           <button
             key={site.site_id}
             onClick={() => navigate(`/sites/${site.site_id}`)}
-            className="flex flex-col gap-2.5 rounded-card border border-border bg-card p-4 text-left transition-colors active:bg-surface"
+            className="flex flex-col gap-2.5 rounded-card border border-border bg-card p-4 text-left shadow-card transition-colors active:bg-surface"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -170,10 +184,10 @@ export function TrialOverview() {
 
 function RiskMeter({ score, band }: { score: number | null; band: SiteSummary["risk_band"] }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 flex-1 max-w-32 overflow-hidden rounded-full bg-surface">
+    <div className="flex items-center gap-2.5">
+      <div className="h-2 flex-1 max-w-32 overflow-hidden rounded-full bg-surface">
         <div
-          className={`h-full rounded-full ${
+          className={`h-full rounded-full transition-all duration-300 ${
             band === "High" ? "bg-risk-high" : band === "Medium" ? "bg-risk-medium" : "bg-risk-low"
           }`}
           style={{ width: `${score ?? 0}%` }}

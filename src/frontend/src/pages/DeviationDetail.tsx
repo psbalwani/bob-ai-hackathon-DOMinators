@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { api } from "../lib/api"
 import { Card, CardBody, CardHeader } from "../components/Card"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
+import { IconChevronLeft } from "../components/icons"
 import type { Severity } from "../types"
 
 const SEVERITY_STYLES: Record<Severity, string> = {
@@ -13,8 +14,8 @@ const SEVERITY_STYLES: Record<Severity, string> = {
 
 function Field({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <div>
-      <div className="text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+    <div className="rounded-lg bg-surface px-3 py-2.5">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted">{label}</div>
       <div className="mt-0.5 text-sm font-medium text-ink">{value ?? "—"}</div>
     </div>
   )
@@ -38,9 +39,10 @@ export function DeviationDetail() {
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <button
         onClick={() => navigate(`/sites/${deviation.site_id}`)}
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
       >
-        ← {deviation.site_id}
+        <IconChevronLeft className="h-3.5 w-3.5" />
+        {deviation.site_id}
       </button>
 
       <header className="mb-6 flex items-start justify-between gap-4">

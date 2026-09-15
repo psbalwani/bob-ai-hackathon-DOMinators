@@ -1,23 +1,26 @@
 import type { PropsWithChildren } from "react"
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 
 const NAV_ITEMS = [{ to: "/", label: "Trial Overview", icon: IconGrid }]
 
 export function Layout({ children }: PropsWithChildren) {
+  const location = useLocation()
+
   return (
     <div className="flex min-h-screen flex-col bg-surface text-ink lg:flex-row">
-      <aside className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-5 py-4 lg:w-60 lg:flex-col lg:items-stretch lg:gap-6 lg:border-b-0 lg:border-r lg:py-6">
+      <aside className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-5 py-4 lg:w-64 lg:flex-col lg:items-stretch lg:gap-7 lg:border-b-0 lg:border-r lg:py-6">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-strong text-base font-bold text-white shadow-card">
             C
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold text-ink">ClinIQ</div>
-            <div className="text-[11px] text-muted">Risk Monitor</div>
+            <div className="text-[11px] text-muted">Trial Risk Monitor</div>
           </div>
         </div>
 
         <nav className="hidden flex-1 flex-col gap-1 lg:flex">
+          <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted">Monitor</div>
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -35,14 +38,23 @@ export function Layout({ children }: PropsWithChildren) {
           ))}
         </nav>
 
-        <div className="mt-auto hidden text-[11px] text-muted lg:block">
-          TRIAL-2026-ONC-04
-          <br />
-          Phase III Oncology
+        <div className="mt-auto hidden rounded-lg border border-border bg-surface px-3 py-2.5 lg:block">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-risk-low opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-risk-low" />
+            </span>
+            TRIAL-2026-ONC-04
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted">Phase III Oncology</div>
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-hidden">
+        <div key={location.pathname} className="animate-page-in">
+          {children}
+        </div>
+      </main>
     </div>
   )
 }

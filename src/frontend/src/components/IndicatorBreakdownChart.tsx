@@ -9,7 +9,7 @@ const LABELS: Record<keyof IndicatorBreakdown, string> = {
   trend_slope: "Trend",
 }
 
-const COLORS = ["#4338ca", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe"]
+const COLORS = ["#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"]
 
 export function IndicatorBreakdownChart({ breakdown }: { breakdown: IndicatorBreakdown }) {
   const data = (Object.keys(LABELS) as (keyof IndicatorBreakdown)[]).map((key) => ({

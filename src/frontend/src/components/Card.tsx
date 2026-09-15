@@ -1,8 +1,16 @@
 import type { PropsWithChildren } from "react"
 
-export function Card({ children, className = "" }: PropsWithChildren<{ className?: string }>) {
+export function Card({
+  children,
+  className = "",
+  hoverable = false,
+}: PropsWithChildren<{ className?: string; hoverable?: boolean }>) {
   return (
-    <div className={`rounded-card border border-border bg-card shadow-sm ${className}`}>
+    <div
+      className={`rounded-card border border-border bg-card shadow-card transition-shadow duration-200 ${
+        hoverable ? "hover:shadow-card-hover" : ""
+      } ${className}`}
+    >
       {children}
     </div>
   )
