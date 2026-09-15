@@ -1,23 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   /* Neutral surface scale */
-  --color-surface: #f7f8fa;
-  --color-surface-dark: #0b0d12;
+  --color-surface: #f6f7fb;
+  --color-surface-dark: #0a0c11;
   --color-card: #ffffff;
   --color-card-dark: #12151b;
-  --color-border: #e4e7ec;
+  --color-border: #e6e8f0;
   --color-border-dark: #232833;
-  --color-ink: #101828;
+  --color-ink: #0f1523;
   --color-ink-dark: #eef1f6;
   --color-muted: #667085;
   --color-muted-dark: #8b93a3;
 
   /* Brand (distinct from risk semantics so nothing is ever ambiguous) */
   --color-brand: #4338ca;
+  --color-brand-strong: #362eaa;
   --color-brand-soft: #eef2ff;
   --color-brand-soft-dark: #1e2247;
 
@@ -32,7 +33,14 @@
   --color-risk-low-soft: #ecfdf5;
   --color-risk-low-soft-dark: #0d2b22;
 
-  --radius-card: 0.75rem;
+  --radius-card: 0.875rem;
+
+  /* Elevation -- flat borders alone read as a wireframe; a soft shadow gives
+     cards actual depth against the surface without looking heavy. */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --shadow-card-hover: 0 4px 10px rgba(16, 24, 40, 0.06), 0 2px 4px rgba(16, 24, 40, 0.04);
+  --shadow-card-dark: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.24);
+  --shadow-card-hover-dark: 0 8px 16px rgba(0, 0, 0, 0.32), 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 :root {
@@ -50,6 +58,8 @@
     --color-risk-high-soft: var(--color-risk-high-soft-dark);
     --color-risk-medium-soft: var(--color-risk-medium-soft-dark);
     --color-risk-low-soft: var(--color-risk-low-soft-dark);
+    --shadow-card: var(--shadow-card-dark);
+    --shadow-card-hover: var(--shadow-card-hover-dark);
   }
 }
 
@@ -66,10 +76,17 @@ body {
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
 }
 
 * {
   box-sizing: border-box;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
 }
 
 ::selection {

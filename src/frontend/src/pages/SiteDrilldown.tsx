@@ -8,6 +8,7 @@ import { TrendTag } from "../components/TrendTag"
 import { Card, CardBody, CardHeader } from "../components/Card"
 import { IndicatorBreakdownChart } from "../components/IndicatorBreakdownChart"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
+import { IconChevronLeft } from "../components/icons"
 import type { Severity } from "../types"
 
 const SEVERITY_STYLES: Record<Severity, string> = {
@@ -47,9 +48,10 @@ export function SiteDrilldown() {
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <button
         onClick={() => navigate("/")}
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
       >
-        ← Trial Overview
+        <IconChevronLeft className="h-3.5 w-3.5" />
+        Trial Overview
       </button>
 
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -71,8 +73,18 @@ export function SiteDrilldown() {
             <div className="text-sm font-medium text-ink">Risk score</div>
           </CardHeader>
           <CardBody className="flex flex-col items-center justify-center gap-2 py-8">
-            <div className="text-5xl font-semibold tabular-nums text-ink">{score.risk_score}</div>
-            <div className="text-xs text-muted">out of 100</div>
+            <div
+              className={`flex h-28 w-28 items-center justify-center rounded-full border-4 ${
+                score.risk_band === "High"
+                  ? "border-risk-high bg-risk-high-soft"
+                  : score.risk_band === "Medium"
+                    ? "border-risk-medium bg-risk-medium-soft"
+                    : "border-risk-low bg-risk-low-soft"
+              }`}
+            >
+              <div className="text-4xl font-semibold tabular-nums text-ink">{score.risk_score}</div>
+            </div>
+            <div className="mt-1 text-xs text-muted">out of 100</div>
             <div className="mt-3 grid w-full grid-cols-2 gap-2 text-center text-xs text-muted">
               <div>
                 <div className="font-medium tabular-nums text-ink">{score.open_deviation_count}</div>
@@ -124,12 +136,14 @@ export function SiteDrilldown() {
             <Link
               key={d.deviation_id}
               to={`/deviations/${d.deviation_id}`}
-              className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface"
+              className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-brand-soft/40"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-semibold ${SEVERITY_STYLES[d.severity]}`}>{d.severity}</span>
-                  <span className="text-sm font-medium text-ink">{d.type.replaceAll("_", " ")}</span>
+                  <span className="text-sm font-medium text-ink group-hover:text-brand">
+                    {d.type.replaceAll("_", " ")}
+                  </span>
                 </div>
                 <div className="mt-0.5 truncate text-xs text-muted">{d.severity_rationale}</div>
               </div>
@@ -151,10 +165,10 @@ export function SiteDrilldown() {
             <Link
               key={c.capa_id}
               to={`/capa/${c.capa_id}`}
-              className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-surface"
+              className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-brand-soft/40"
             >
               <div className="min-w-0">
-                <div className="text-sm font-medium text-ink">{c.capa_id}</div>
+                <div className="text-sm font-medium text-ink group-hover:text-brand">{c.capa_id}</div>
                 <div className="mt-0.5 truncate text-xs text-muted">{c.root_cause}</div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
