@@ -83,7 +83,9 @@ demo/*.avi
 demo/*.mkv
 
 # ── Docker volumes / local data ───────────────────────────────────────────────
-data/
+# Anchored to repo root only -- an unanchored `data/` also matches
+# src/data/ (the synthetic data *generator* source, which must be tracked).
+/data/
 logs/
 *.log
 
