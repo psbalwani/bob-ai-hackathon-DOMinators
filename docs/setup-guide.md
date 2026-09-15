@@ -23,11 +23,13 @@ cp src/.env.example src/.env
 
 | Variable | Description | Required |
 |---|---|---|
-| `WATSONX_API_KEY` | IBM watsonx.ai API key (deviation judgment, severity rationale, CAPA generation) | Yes |
-| `WATSONX_PROJECT_ID` | watsonx.ai project ID | Yes |
-| `WATSONX_URL` | watsonx.ai region endpoint | Yes |
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `APP_PORT` | Backend API port | No (default `8000`) |
+| `WATSONX_API_KEY` | IBM watsonx.ai API key | No — only used for the one ambiguous late-visit severity case in Track A's detector (`src/detection/llm_hook.py`); without it, that case falls back to a deterministic default and everything else works unchanged |
+| `WATSONX_URL` | watsonx.ai region endpoint, e.g. `https://eu-de.ml.cloud.ibm.com` | Only if using the above |
+| `WATSONX_SPACE_ID` | watsonx.ai deployment space ID — **preferred** over `WATSONX_PROJECT_ID`; a project without an attached WML instance will 403 even with valid credentials | Only if using the above |
+| `WATSONX_PROJECT_ID` | watsonx.ai project ID (fallback if no space is available) | Only if using the above |
+| `WATSONX_MODEL_ID` | Model to call, e.g. `ibm/granite-13b-instruct-v2` | No (has a default) |
+| `DATABASE_URL` | PostgreSQL connection string | Reserved for Track D (orchestration/persistence) — not used by any code yet |
+| `APP_PORT` | Backend API port | No (default `8000`) — Track A's own service currently runs on port `8001` (see `src/detection/README.md`) so it doesn't collide with Track D's future gateway |
 
 ## Installation
 
