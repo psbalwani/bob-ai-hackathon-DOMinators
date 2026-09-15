@@ -170,5 +170,12 @@ echoing the seed label, which is the intended behavior.
   the module as its own small FastAPI endpoint early"), not Track D's
   unified gateway (`src/backend` in `docs/setup-guide.md`) — Track D
   proxies to this until integration.
-- ⬜ `tests/` — high-risk site, low-risk site, and the "few visits, one
-  Major deviation" edge case called out in `docs/03_team_division.md`.
+- ✅ `tests/test_risk_scoring.py` (top-level `tests/`, matching Track A's
+  convention) — hand-built fixtures (not the generated dataset, so expected
+  numbers are exactly derivable): a clearly high-risk site (every indicator
+  saturated -> `risk_score == 100`), a clearly low-risk site, the
+  zero-deviation edge case, and the rate-vs-raw-count edge case — a 2-visit
+  site and a 200-visit site each with exactly one identical Major
+  deviation score `70/High` vs `9/Low` respectively, proving the model
+  rate-normalizes rather than counting raw deviations. All 4 pass
+  (`pytest tests/test_risk_scoring.py -v`).
