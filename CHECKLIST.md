@@ -46,14 +46,14 @@ This is the single source of truth for what's left before submission. It covers 
 - [x] Leading indicators + weighting defined and documented (frequency, severity mix, recency, trend, repeat-offense rate) — this is a judging talking point, write the rationale down (`src/risk_scoring/DESIGN.md`)
 - [x] Weighted scoring model implemented (`src/risk_scoring/indicators.py`, `scoring.py`) — sanity-checked against the real synthetic dataset: top 5 by `risk_score` are exactly the 5 seeded high-tier sites, zero-deviation sites score 0
 - [x] Trend calculation implemented (site improving/worsening over trial timeline) — `src/risk_scoring/trend.py`, tercile comparison with calibrated noise threshold; verified 12/17 sites match `seed_trend_intent` (volatile detection is the known weak point at this sample size, documented in the module)
-- [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels
-- [x] `POST /risk-score/site` endpoint live (`src/risk_scoring/api.py`, standalone FastAPI service on port 8001; run with `uvicorn src.risk_scoring.api:app --reload --port 8001`) — manually verified against real dataset (200 + error cases)
+- [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels — no such ground-truth label actually exists in the generated dataset (only `seed_risk_tier`/`seed_trend_intent`, the same metadata that seeds the deviations); training against a label derived from that would be circular, not real calibration. Recommend skipping and recording as a known limitation rather than building a hollow model, pending final call.
+- [x] `POST /risk-score/site` endpoint live (`src/risk_scoring/api.py`, standalone FastAPI service on port 8002; run with `uvicorn src.risk_scoring.api:app --reload --port 8002`) — manually verified against real dataset (200 + error cases)
 - [x] `GET /risk-score/site/{site_id}` endpoint live (same service) — also `GET /risk-score/ranking?protocol_id=...` per contract
 - [x] Test case: clearly high-risk site (`tests/test_risk_scoring.py::test_clearly_high_risk_site` — every indicator saturated, `risk_score == 100`)
 - [x] Test case: clearly low-risk site (`test_clearly_low_risk_site`, plus `test_zero_deviations_is_low_not_gamed_the_other_way`)
 - [x] Test case: edge case (few visits, one Major deviation) — confirms score is rate-driven, not raw-count-driven (`test_one_major_deviation_scores_by_rate_not_raw_count`: identical single deviation scores 70/High at 2 visits vs 9/Low at 200 visits). All 4 tests pass.
 - [x] Output matches `RiskScore` object contract in `05_api_contracts.md` (field-for-field, including the error convention `{"error": {"code", "message"}}` — verified 404/400 cases manually)
-- [ ] Built/tested against Track A's real output (not just mocked deviations) — currently built against `mock_deviations_from_seed` in `loaders.py`
+- [x] Built/tested against Track A's real output (not just mocked deviations) — `loaders.py` now prefers Track A's real detector snapshot (`data/detected/deviations.json`, `detector_version: "rule-v1"`) over the mock when present, falling back gracefully otherwise. Verified: demo-scale ranking still puts all 5 seeded high-tier sites on top; full-scale (220 sites) reproduces Track C's documented 59/61 (96.7%) benchmark exactly. Fixed a real port collision found along the way: Track A's and Track B's standalone services were both hardcoded to 8001 — Track B moved to 8002.
 
 ---
 

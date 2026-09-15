@@ -1,12 +1,21 @@
-"""Data loading for Track B, decoupled from Track A's detector being ready.
+"""Data loading for Track B.
 
-`load_deviations` accepts anything already shaped like the `Deviation` object
-in docs/04_data_schema.md section 3 (i.e. Track A's real
-`POST /deviations/detect` output). Until that endpoint exists,
-`mock_deviations_from_seed` adapts Track C's ground-truth seed file
-(`seeded_deviations_ground_truth.json`) into the same shape, per the
-team-division note: "can build against mocked deviations until Track A is
-ready."
+`load_deviations` picks the best available source of real, Deviation-shaped
+dicts (docs/04_data_schema.md section 3), in order:
+
+1. An explicit `deviations` argument (tests, callers that already have them).
+2. Track A's real detector snapshot, if `src/detection/store.py` has written
+   one for this data_dir (see `_detected_snapshot_path` below) --
+   `data/synthetic` -> `data/detected/deviations.json`,
+   `data/synthetic_fullscale` -> `data/detected_fullscale/deviations.json`.
+   Produced by running Track A's detector once, e.g. via its FastAPI
+   service's startup hook, or `src.detection.detector.detect_deviations`
+   directly against a given data dir.
+3. `mock_deviations_from_seed`, adapting Track C's ground-truth seed file
+   (`seeded_deviations_ground_truth.json`) into the same shape -- the
+   original fallback per the team-division note ("can build against mocked
+   deviations until Track A is ready"), now only used if neither of the
+   above is available (e.g. a fresh checkout before anyone has run Track A).
 """
 
 from __future__ import annotations
@@ -71,8 +80,44 @@ def mock_deviations_from_seed(data_dir: Path) -> list[dict]:
     return deviations
 
 
+def _detected_snapshot_path(data_dir: Path) -> Path:
+    """Where Track A's detector snapshot would live for this data_dir.
+
+    Mirrors src/detection/api.py's _snapshot_path() convention
+    (data/detected/deviations.json by default) but derives the sibling
+    directory name from data_dir so a full-scale run
+    (data/synthetic_fullscale) looks for its own snapshot
+    (data/detected_fullscale) rather than the demo one. Keep both in sync
+    if this convention ever changes.
+
+    To actually produce the full-scale snapshot, run Track A's real
+    service against that data dir once (it writes the matching snapshot
+    automatically on startup):
+        DETECTION_DATA_DIR=data/synthetic_fullscale python -m uvicorn src.detection.api:app --port 8001
+    This function only *reads* whatever snapshot already exists -- it does
+    not run detection itself, so a data_dir with no snapshot yet correctly
+    falls back to the mock (see load_deviations) rather than silently
+    appearing to work with stale or absent data.
+    """
+    detected_dir_name = data_dir.name.replace("synthetic", "detected")
+    return data_dir.parent / detected_dir_name / "deviations.json"
+
+
+def load_real_deviations_snapshot(data_dir: Path) -> list[dict] | None:
+    """Track A's real detector output for this data_dir, if it's been run."""
+    path = _detected_snapshot_path(data_dir)
+    if not path.exists():
+        return None
+    return _load_json(path)
+
+
 def load_deviations(data_dir: Path, deviations: list[dict] | None = None) -> list[dict]:
-    """Return Deviation-shaped dicts: real ones if passed in, else the mock adapter."""
+    """Return Deviation-shaped dicts: explicit override > Track A's real
+    detector snapshot > the mock adapter, in that order (see module
+    docstring)."""
     if deviations is not None:
         return deviations
+    real = load_real_deviations_snapshot(data_dir)
+    if real is not None:
+        return real
     return mock_deviations_from_seed(data_dir)

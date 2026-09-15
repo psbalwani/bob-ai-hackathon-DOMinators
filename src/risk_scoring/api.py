@@ -7,12 +7,14 @@ eventual gateway (src/backend, per docs/setup-guide.md) proxies to this
 during early integration; this file is not that gateway.
 
 Run standalone:
-    uvicorn src.risk_scoring.api:app --reload --port 8001
+    uvicorn src.risk_scoring.api:app --reload --port 8002
 
 Data is loaded once at startup from DATA_DIR (default data/synthetic) and
 held in memory — no database, consistent with the rest of this hackathon
-project. Deviations come from Track C's seeded ground truth via
-loaders.load_deviations() until Track A's POST /deviations/detect exists.
+project. Deviations come from loaders.load_deviations(), which prefers
+Track A's real detector snapshot (data/detected/deviations.json) when
+present, falling back to the seeded ground truth mock otherwise -- see
+loaders.py's module docstring.
 """
 
 from __future__ import annotations

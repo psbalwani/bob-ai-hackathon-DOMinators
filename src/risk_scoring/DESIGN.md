@@ -164,7 +164,7 @@ echoing the seed label, which is the intended behavior.
   `docs/05_api_contracts.md` (including its error convention). Run it with:
   ```
   pip install -r src/risk_scoring/requirements.txt
-  uvicorn src.risk_scoring.api:app --reload --port 8001
+  uvicorn src.risk_scoring.api:app --reload --port 8002
   ```
   This is Track B's own early stub per `docs/03_team_division.md` ("expose
   the module as its own small FastAPI endpoint early"), not Track D's

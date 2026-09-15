@@ -2,11 +2,15 @@
 
 Run with:
     python -m uvicorn src.detection.api:app --reload --port 8001
+
+Against the full-scale dataset instead of the demo one:
+    DETECTION_DATA_DIR=data/synthetic_fullscale python -m uvicorn src.detection.api:app --reload --port 8001
 """
 
 from __future__ import annotations
 
 import json
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -21,7 +25,22 @@ from .detector import detect_deviations
 # Load src/.env (WATSONX_API_KEY etc.) before any request touches llm_hook.py.
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
-SYNTHETIC_DIR = Path("data/synthetic")
+SYNTHETIC_DIR = Path(os.environ.get("DETECTION_DATA_DIR", "data/synthetic"))
+
+
+def _snapshot_path() -> Path:
+    """Where this run's snapshot should land, derived from SYNTHETIC_DIR.
+
+    Same convention as src/risk_scoring/loaders.py's _detected_snapshot_path
+    -- data/synthetic -> data/detected, data/synthetic_fullscale ->
+    data/detected_fullscale -- so a non-default DETECTION_DATA_DIR doesn't
+    silently overwrite the demo snapshot (or get silently ignored by a
+    consumer looking for a sibling-named detected dir). Keep both in sync
+    if this convention ever changes.
+    """
+    detected_dir_name = SYNTHETIC_DIR.name.replace("synthetic", "detected")
+    return SYNTHETIC_DIR.parent / detected_dir_name / "deviations.json"
+
 
 _protocol: dict | None = None
 _visit_records: list[dict] = []
@@ -42,7 +61,7 @@ def _run_detection(visit_record_ids: list[str] | None = None) -> list:
     if _protocol is None:
         raise HTTPException(
             status_code=404,
-            detail={"code": "NOT_FOUND", "message": "no dataset loaded (data/synthetic/ missing)"},
+            detail={"code": "NOT_FOUND", "message": f"no dataset loaded ({SYNTHETIC_DIR}/ missing)"},
         )
     if visit_record_ids is None:
         records = _visit_records
@@ -53,7 +72,7 @@ def _run_detection(visit_record_ids: list[str] | None = None) -> list:
     deviations = detect_deviations(_protocol, records)
     considered_ids = {r["visit_record_id"] for r in records}
     store.replace_for_records(deviations, considered_ids)
-    store.save_snapshot()
+    store.save_snapshot(path=_snapshot_path())
     return deviations
 
 
