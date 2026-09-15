@@ -45,7 +45,7 @@ This is the single source of truth for what's left before submission. It covers 
 
 - [x] Leading indicators + weighting defined and documented (frequency, severity mix, recency, trend, repeat-offense rate) — this is a judging talking point, write the rationale down (`src/risk_scoring/DESIGN.md`)
 - [x] Weighted scoring model implemented (`src/risk_scoring/indicators.py`, `scoring.py`) — sanity-checked against the real synthetic dataset: top 5 by `risk_score` are exactly the 5 seeded high-tier sites, zero-deviation sites score 0
-- [ ] Trend calculation implemented (site improving/worsening over trial timeline) — `scoring.py` has a basic placeholder label; dedicated `trend.py` with noise-aware handling still to do
+- [x] Trend calculation implemented (site improving/worsening over trial timeline) — `src/risk_scoring/trend.py`, tercile comparison with calibrated noise threshold; verified 12/17 sites match `seed_trend_intent` (volatile detection is the known weak point at this sample size, documented in the module)
 - [ ] (Stretch) Secondary ML model calibrated against synthetic "site failed audit" labels
 - [ ] `POST /risk-score/site` endpoint live
 - [ ] `GET /risk-score/site/{site_id}` endpoint live

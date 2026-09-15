@@ -152,10 +152,13 @@ echoing the seed label, which is the intended behavior.
 - ✅ `scoring.py` — weighting, `risk_score`/`indicator_breakdown`/`risk_band`
   assembly, `compute_site_risk_score` / `rank_sites`, plus a CLI for the
   sanity check above.
-- ⬜ `trend.py` — a more careful categorical `trend` label (`worsening` /
-  `stable` / `improving` / `volatile`), addressing the low-sample noise
-  called out in indicator 5 above. `scoring.py` currently derives a basic
-  3-way label as a placeholder.
+- ✅ `trend.py` — categorical `trend` label (`worsening` / `stable` /
+  `improving` / `volatile`) via an early/mid/late tercile comparison with a
+  calibrated noise threshold, wired into `scoring.py`. Verified against the
+  real dataset's `seed_trend_intent`: 12/17 sites with any deviations match
+  (10/11 `stable` correct, 2/3 `worsening` correct, 0/2 `volatile` correct —
+  volatile detection is the known weak point at this sample size, documented
+  in `trend.py`'s module docstring rather than papered over).
 - ⬜ `api.py` — `POST /risk-score/site`, `GET /risk-score/site/{site_id}`,
   `GET /risk-score/ranking`.
 - ⬜ `tests/` — high-risk site, low-risk site, and the "few visits, one
