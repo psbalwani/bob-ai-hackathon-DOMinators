@@ -13,3 +13,10 @@
 - Read `CHECKLIST.md` at the start of a session to know what's already done before starting new work.
 
 See `docs/03_team_division.md` for track ownership and `docs/05_api_contracts.md` / `docs/04_data_schema.md` for the frozen contracts each track must respect.
+
+## MANDATORY: Git / commit rules for AI agents
+
+- **Never** add yourself, your agent name, or your model name as a contributor, author, or co-author of any commit. No `Co-Authored-By` lines, no attribution footers, no signature of any kind identifying an AI tool or model in commit messages, PR descriptions, or file content.
+- Commits are authored and attributed to the human teammate driving the session only.
+- **Never push directly to `main` (or any shared branch).** Always work on a feature/track branch and open a pull request for a human teammate to review and merge.
+- Do not merge your own PR.
