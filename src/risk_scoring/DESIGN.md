@@ -159,7 +159,16 @@ echoing the seed label, which is the intended behavior.
   (10/11 `stable` correct, 2/3 `worsening` correct, 0/2 `volatile` correct —
   volatile detection is the known weak point at this sample size, documented
   in `trend.py`'s module docstring rather than papered over).
-- ⬜ `api.py` — `POST /risk-score/site`, `GET /risk-score/site/{site_id}`,
-  `GET /risk-score/ranking`.
+- ✅ `api.py` — standalone FastAPI service exposing `POST /risk-score/site`,
+  `GET /risk-score/site/{site_id}`, `GET /risk-score/ranking`, per
+  `docs/05_api_contracts.md` (including its error convention). Run it with:
+  ```
+  pip install -r src/risk_scoring/requirements.txt
+  uvicorn src.risk_scoring.api:app --reload --port 8001
+  ```
+  This is Track B's own early stub per `docs/03_team_division.md` ("expose
+  the module as its own small FastAPI endpoint early"), not Track D's
+  unified gateway (`src/backend` in `docs/setup-guide.md`) — Track D
+  proxies to this until integration.
 - ⬜ `tests/` — high-risk site, low-risk site, and the "few visits, one
   Major deviation" edge case called out in `docs/03_team_division.md`.
