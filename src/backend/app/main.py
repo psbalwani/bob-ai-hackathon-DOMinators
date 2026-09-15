@@ -20,6 +20,13 @@ import json
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Must run before any local/src import below: db.py reads DATABASE_URL from
+# os.environ at *module import time* (so db.USING_DB is fixed once, not
+# re-checked per request), so .env has to be loaded first or that flag
+# silently freezes as False even with a real DATABASE_URL configured.
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent / ".env")
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -34,8 +41,6 @@ from src.risk_scoring.scoring import compute_site_risk_score, rank_sites
 
 from . import persistence, pipeline
 from .db import init_db
-
-load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent / ".env")
 
 DATA_DIR = Path("data/synthetic")
 
