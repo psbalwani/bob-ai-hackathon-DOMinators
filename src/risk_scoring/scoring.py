@@ -18,6 +18,7 @@ from pathlib import Path
 
 from . import indicators
 from .loaders import load_deviations, load_protocol, load_sites, load_visit_records
+from .trend import classify_trend
 
 # Order matches the worked example in docs/04_data_schema.md section 4.
 WEIGHTS = {
@@ -30,20 +31,6 @@ WEIGHTS = {
 
 RISK_BAND_HIGH = 70
 RISK_BAND_MEDIUM = 40
-
-# Trend-label thresholds on the *signed* trend, in [-1, 1]. Refined further
-# (e.g. "volatile" detection) in the dedicated trend-calculation task.
-TREND_WORSENING_THRESHOLD = 0.2
-TREND_IMPROVING_THRESHOLD = -0.2
-
-
-def _trend_label(raw_signed: float) -> str:
-    if raw_signed > TREND_WORSENING_THRESHOLD:
-        return "worsening"
-    if raw_signed < TREND_IMPROVING_THRESHOLD:
-        return "improving"
-    return "stable"
-
 
 def compute_site_risk_score(
     site_id: str,
@@ -68,9 +55,7 @@ def compute_site_risk_score(
         as_of = max(parsed) if parsed else date.today()
 
     if site_deviations:
-        raw_signed_trend, trend_scored_raw = indicators.trend_slope(
-            site_deviations, site_visits, visit_schedule
-        )
+        _, trend_scored_raw = indicators.trend_slope(site_deviations, site_visits, visit_schedule)
         raw = {
             "severity_mix_weight": indicators.severity_mix_weight(site_deviations, total_visits),
             "deviation_frequency": indicators.deviation_frequency(site_deviations, total_visits),
@@ -82,7 +67,6 @@ def compute_site_risk_score(
         # No deviations at all: there is no risk signal and no trend to
         # speak of — a neutral (0.5) trend_slope would otherwise still
         # contribute points. See DESIGN.md's zero-deviation edge case.
-        raw_signed_trend = 0.0
         raw = {k: 0.0 for k in WEIGHTS}
 
     contributions = {k: WEIGHTS[k] * raw[k] for k in WEIGHTS}
@@ -108,7 +92,7 @@ def compute_site_risk_score(
         "risk_band": risk_band,
         "computed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "indicator_breakdown": indicator_breakdown,
-        "trend": _trend_label(raw_signed_trend),
+        "trend": classify_trend(site_deviations, site_visits, visit_schedule),
         "open_deviation_count": len(site_deviations),
         "total_visits": total_visits,
     }
