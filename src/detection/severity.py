@@ -7,8 +7,16 @@ conservative default -- see the module docstring there for why.
 
 from __future__ import annotations
 
-from . import llm_hook
+from . import llm_hook, retrieval
 from .rules import Finding
+
+# Fixed query for the one ambiguous case (see below) -- deliberately phrased
+# to match how the ICH-TAXONOMY-MINOR / ICH-TAXONOMY-ADMINISTRATIVE chunks
+# describe this exact boundary ("late_visit ... outside ... window").
+_LATE_VISIT_AMBIGUOUS_QUERY = (
+    "late visit outside protocol window severity minor or administrative "
+    "documentation lapse"
+)
 
 CLAUSE_SECTION_FOR_TYPE = {
     "missed_visit": "3.1",
@@ -58,15 +66,24 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
 
     if finding.type == "late_visit":
         extra_days = finding.context["extra_days"]
+        retrieved_chunks = []
         if extra_days <= _LATE_VISIT_ADMIN_MAX_EXTRA_DAYS:
             severity = "Administrative"
         elif extra_days >= _LATE_VISIT_MINOR_MIN_EXTRA_DAYS:
             severity = "Minor"
         else:
+            # The genuinely ambiguous band: retrieve real ICH E6(R2) grounding
+            # (local, deterministic, never raises) and hand it to the one
+            # optional live model call this detector makes.
+            try:
+                retrieved_chunks = retrieval.retrieve_ich_grounding(_LATE_VISIT_AMBIGUOUS_QUERY)
+            except Exception:
+                retrieved_chunks = []
             severity = llm_hook.classify_late_visit_severity(
                 extra_days=extra_days,
                 window_days=finding.context.get("window_days", 0),
                 clause_text=clause_text,
+                retrieved_chunks=retrieved_chunks,
             ) or "Minor"
         rationale = (
             "Visit occurred outside the allowed window; documentation lapse "
@@ -75,6 +92,8 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
             else "Visit occurred outside the allowed window; no immediate "
             "safety impact but the deviation must be documented per Section 3.1."
         )
+        if retrieved_chunks:
+            rationale += " ICH grounding retrieved: " + ", ".join(c.citation for c in retrieved_chunks) + "."
         return severity, rationale, clause_ref
 
     if finding.type == "dosage_out_of_range":

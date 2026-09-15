@@ -50,7 +50,7 @@ submission:
   tech_stack:
     languages: ["Python", "TypeScript"]                      # REQUIRED — e.g., ["Python", "TypeScript"]
     frameworks: ["FastAPI", "React"]                     # e.g., ["FastAPI", "React"]
-    ibm_technologies: ["IBM Bob"]               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
+    ibm_technologies: ["IBM Bob", "watsonx.ai"]               # e.g., ["watsonx.ai", "IBM Bob", "IBM Cloud Functions"]
     databases: ["PostgreSQL"]                      # e.g., ["PostgreSQL", "Redis"]
     other: ["Docker"]                          # e.g., ["Docker", "GitHub Actions", "Slack API"]
 
