@@ -1,0 +1,3 @@
+fastapi>=0.141
+uvicorn>=0.53
+pytest>=9.1
