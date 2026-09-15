@@ -83,10 +83,21 @@ def mock_deviations_from_seed(data_dir: Path) -> list[dict]:
 def _detected_snapshot_path(data_dir: Path) -> Path:
     """Where Track A's detector snapshot would live for this data_dir.
 
-    Mirrors src/detection/store.py's DEFAULT_SNAPSHOT_PATH convention
-    (data/detected/deviations.json) but derives the sibling directory name
-    from data_dir so a full-scale run (data/synthetic_fullscale) looks for
-    its own snapshot (data/detected_fullscale) rather than the demo one.
+    Mirrors src/detection/api.py's _snapshot_path() convention
+    (data/detected/deviations.json by default) but derives the sibling
+    directory name from data_dir so a full-scale run
+    (data/synthetic_fullscale) looks for its own snapshot
+    (data/detected_fullscale) rather than the demo one. Keep both in sync
+    if this convention ever changes.
+
+    To actually produce the full-scale snapshot, run Track A's real
+    service against that data dir once (it writes the matching snapshot
+    automatically on startup):
+        DETECTION_DATA_DIR=data/synthetic_fullscale python -m uvicorn src.detection.api:app --port 8001
+    This function only *reads* whatever snapshot already exists -- it does
+    not run detection itself, so a data_dir with no snapshot yet correctly
+    falls back to the mock (see load_deviations) rather than silently
+    appearing to work with stale or absent data.
     """
     detected_dir_name = data_dir.name.replace("synthetic", "detected")
     return data_dir.parent / detected_dir_name / "deviations.json"
