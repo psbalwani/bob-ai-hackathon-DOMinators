@@ -97,10 +97,14 @@ def generate(
             f"The most frequent pattern is {dominant_type} "
             f"({type_counts[dominant_type]} occurrence(s)): {dominant_actions.root_cause}"
         )
-        corrective_action = " ".join(
+        # Real newlines (not spaces) between numbered items: renders as a
+        # proper ordered list in Markdown/PDF export and lets the frontend
+        # (CapaView.tsx) split on "\n" to render an actual <ol> instead of
+        # one run-on paragraph with inline "1. ... 2. ..." text.
+        corrective_action = "\n".join(
             f"{i+1}. {action_sets[t].corrective_action}" for i, t in enumerate(distinct_types)
         )
-        preventive_action = " ".join(
+        preventive_action = "\n".join(
             f"{i+1}. {action_sets[t].preventive_action}" for i, t in enumerate(distinct_types)
         )
 
