@@ -67,6 +67,11 @@ Returns all sites for a protocol, ranked by `risk_score` descending.
 { "sites": [ { "site_id": "SITE-017", "risk_score": 78, "risk_band": "High" }, ... ] }
 ```
 
+### `GET /risk-score/drug-summary?protocol_id=...` *(post-freeze addition, stretch feature)*
+Track B's own standalone-service version of drug-level aggregation (see `GET /dashboard/drug-performance` under Track D below, which is what the dashboard actually calls). Same computation, minus the CAPA-remediation factor — this service has no CAPA data, so `unresolved_capa_rate` is dropped and its weight redistributed (see `src/risk_scoring/drug_aggregate.py`).
+
+**Response:** a `DrugPerformance` object (see `04_data_schema.md` section 7) with `capa_summary: null`.
+
 ---
 
 ## Track C — CAPA Generation
@@ -116,6 +121,11 @@ Aggregated view for the Trial Overview screen.
   "site_ranking": [ { "site_id": "SITE-017", "risk_score": 78, "risk_band": "High" }, ... ]
 }
 ```
+
+### `GET /dashboard/drug-performance?protocol_id=...` *(post-freeze addition, stretch feature)*
+Drug-level aggregation across every site under the protocol — the single-number, single-verdict view for a regulatory-affairs / trial-sponsor audience ("would this drug's site network pass an FDA inspection right now"), backing the dashboard's Drug Performance page. Rolls up Track B's persisted site risk scores, Track A's deviations, and Track C's CAPA review statuses; computation lives in `src/risk_scoring/drug_aggregate.py` (Track B), wired here the same way `dashboard_summary` wires `rank_sites`.
+
+**Response:** a `DrugPerformance` object (see `04_data_schema.md` section 7).
 
 ---
 

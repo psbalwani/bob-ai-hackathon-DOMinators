@@ -14,6 +14,7 @@ from pathlib import Path
 from src.capa import corpus as capa_corpus
 from src.capa import generator as capa_generator
 from src.detection.detector import detect_deviations
+from src.risk_scoring import drug_aggregate
 from src.risk_scoring.loaders import load_protocol, load_sites, load_visit_records
 from src.risk_scoring.scoring import rank_sites
 
@@ -99,6 +100,42 @@ def dashboard_summary(protocol_id: str, data_dir: Path = DEFAULT_DATA_DIR) -> di
             for s in ranking
         ],
     }
+
+
+def drug_performance_summary(protocol_id: str, data_dir: Path = DEFAULT_DATA_DIR) -> dict:
+    """Drug-level rollup for the Drug Performance screen: aggregates every
+    site's persisted risk score plus the drug's deviations and CAPA
+    remediation status into one `DrugPerformance` object (see
+    `src/risk_scoring/drug_aggregate.py`). This is the "single source of
+    truth" view for a regulatory-affairs / trial-sponsor audience -- one
+    risk index and readiness verdict per drug, not per site.
+
+    Like `dashboard_summary`, runs the pipeline once first if it hasn't
+    run yet so this is never empty on a fresh start.
+    """
+    if persistence.get_latest_pipeline_run(protocol_id) is None:
+        run_pipeline(protocol_id, data_dir)
+
+    sites = load_sites(data_dir)
+    visit_records = load_visit_records(data_dir)
+    protocol = load_protocol(data_dir)
+    site_ids = [s["site_id"] for s in sites]
+
+    ranking = persistence.get_ranking(protocol_id)
+    if not ranking:
+        deviations = persistence.get_all_deviations(protocol_id) or [
+            d.to_dict() for d in detect_deviations(protocol, visit_records)
+        ]
+        ranking = rank_sites(protocol_id, deviations, visit_records, protocol["visit_schedule"], site_ids)
+        persistence.save_risk_scores(ranking)
+
+    deviations = persistence.get_all_deviations(protocol_id)
+    capa_reports = [
+        {"capa_id": r["capa_id"], "site_id": r["site_id"], "review_status": persistence.get_capa_review(r["capa_id"])["status"]}
+        for r in persistence.get_all_capa_reports(protocol_id)
+    ]
+
+    return drug_aggregate.compute_drug_performance(protocol_id, ranking, deviations, capa_reports)
 
 
 def _load_json_count(path: Path) -> int:

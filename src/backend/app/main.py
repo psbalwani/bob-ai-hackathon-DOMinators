@@ -195,6 +195,15 @@ def get_dashboard_summary(protocol_id: str, user: auth.User = Depends(auth.get_c
     return pipeline.dashboard_summary(protocol_id, ds["data_dir"])
 
 
+@app.get("/dashboard/drug-performance")
+def get_drug_performance(protocol_id: str, user: auth.User = Depends(auth.get_current_user)) -> dict:
+    """Drug-level aggregation across every site under this protocol -- the
+    single-number/single-verdict view for a regulatory-affairs audience.
+    See docs/05_api_contracts.md and src/risk_scoring/drug_aggregate.py."""
+    ds = _authorize(user, protocol_id)
+    return pipeline.drug_performance_summary(protocol_id, ds["data_dir"])
+
+
 @app.get("/protocol")
 def get_protocol(protocol_id: str, user: auth.User = Depends(auth.get_current_user)) -> dict:
     ds = _authorize(user, protocol_id)

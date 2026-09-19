@@ -26,6 +26,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from . import drug_aggregate
 from .loaders import load_deviations, load_protocol, load_sites, load_visit_records
 from .scoring import compute_site_risk_score, rank_sites
 
@@ -124,3 +125,23 @@ def get_risk_score_ranking(protocol_id: str) -> dict:
             for s in ranking
         ]
     }
+
+
+@app.get("/risk-score/drug-summary")
+def get_drug_summary(protocol_id: str) -> dict:
+    """Drug-level aggregation across every site (drug_aggregate.py). This
+    standalone service has no CAPA data (that's Track C/D's domain), so
+    the `unresolved_capa_rate` factor is dropped and its weight
+    redistributed -- see drug_aggregate.py's module docstring. Track D's
+    gateway (src/backend) calls the same function with real CAPA data at
+    `GET /dashboard/drug-performance`, which is what the dashboard uses."""
+    if protocol_id != _protocol["protocol_id"]:
+        raise ApiError(400, "VALIDATION_ERROR", f"protocol_id '{protocol_id}' not found")
+    ranking = rank_sites(
+        protocol_id,
+        _deviations,
+        _visit_records,
+        _protocol["visit_schedule"],
+        sorted(_site_ids()),
+    )
+    return drug_aggregate.compute_drug_performance(protocol_id, ranking, _deviations, capa_reports=None)
