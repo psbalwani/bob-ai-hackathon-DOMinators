@@ -10,11 +10,39 @@ import { Button } from "../components/Button"
 import { IconChevronLeft } from "../components/icons"
 import type { CapaReport } from "../types"
 
+/** A multi-type CAPA report's corrective/preventive action is a numbered
+ * list ("1. ... 2. ... 3. ...") -- generator.py now joins items with real
+ * newlines, but older persisted reports (and any LLM-refined text) may
+ * still have them space-separated, so this matches "N. " markers directly
+ * rather than only splitting on "\n". Requires markers to be sequential
+ * starting at 1 so incidental "on day 2." prose doesn't get misread as a
+ * list; falls back to plain text otherwise. */
+function parseNumberedList(text: string): string[] | null {
+  const markers = [...text.matchAll(/(?:^|\s)(\d+)\.\s+/g)]
+  if (markers.length < 2) return null
+  if (markers.some((m, i) => Number(m[1]) !== i + 1)) return null
+
+  return markers.map((m, i) => {
+    const start = m.index! + m[0].length
+    const end = i + 1 < markers.length ? markers[i + 1].index! : text.length
+    return text.slice(start, end).trim()
+  })
+}
+
 function Section({ title, body }: { title: string; body: string }) {
+  const items = parseNumberedList(body)
   return (
     <div>
       <div className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</div>
-      <p className="mt-1.5 text-sm leading-relaxed text-ink">{body}</p>
+      {items ? (
+        <ol className="mt-1.5 list-decimal space-y-1.5 pl-5 text-sm leading-relaxed text-ink marker:text-muted">
+          {items.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-1.5 text-sm leading-relaxed text-ink">{body}</p>
+      )}
     </div>
   )
 }
