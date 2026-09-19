@@ -83,6 +83,16 @@ export function IconMoon({ className = "h-4 w-4" }: IconProps) {
   )
 }
 
+export function IconLayers({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden>
+      <path d="M10 2.5 2.5 7l7.5 4.5L17.5 7 10 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M2.5 10.5 10 15l7.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M2.5 13.75 10 18.25l7.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function IconShieldCheck({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden>

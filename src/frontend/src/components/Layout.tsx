@@ -2,12 +2,7 @@ import type { PropsWithChildren } from "react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth"
 import { useTheme } from "../lib/theme"
-import { IconMoon, IconShieldCheck, IconSun } from "./icons"
-
-const NAV_ITEMS = [
-  { to: "/", label: "Trial Overview", icon: IconGrid },
-  { to: "/drug-performance", label: "Drug Performance", icon: IconShieldCheck },
-]
+import { IconLayers, IconMoon, IconShieldCheck, IconSun } from "./icons"
 
 export function Layout({ children }: PropsWithChildren) {
   const location = useLocation()
@@ -15,6 +10,13 @@ export function Layout({ children }: PropsWithChildren) {
   const { user, currentProtocolId, setCurrentProtocolId, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const currentProtocol = user?.protocols.find((p) => p.protocol_id === currentProtocolId)
+  const isMultiDrug = (user?.protocols.length ?? 0) > 1
+
+  const navItems = [
+    { to: "/", label: "Trial Overview", icon: IconGrid },
+    { to: "/drug-performance", label: "Drug Performance", icon: IconShieldCheck },
+    ...(isMultiDrug ? [{ to: "/admin", label: "All Drugs", icon: IconLayers }] : []),
+  ]
 
   function handleLogout() {
     logout()
@@ -47,7 +49,7 @@ export function Layout({ children }: PropsWithChildren) {
 
         <nav className="hidden flex-1 flex-col gap-1 lg:flex">
           <div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted">Monitor</div>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
