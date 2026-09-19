@@ -27,6 +27,19 @@ committing it; the default seed is fixed so the output is reproducible):
 | `seeded_deviations_ground_truth.json` / `.csv` | The ground-truth answer key: which `visit_record_id`s were deliberately broken, what type, and the **expected** severity + rationale + clause citation. Use this to score Track A's detector (recall/precision) and Track B's ranking. Field names mirror the `Deviation` object in `04_data_schema.md`, but use `seed_id`/`expected_severity` (not `deviation_id`/`severity`) so a seeded row can never collide with a detector-generated `DEV-xxxxxx` row. |
 | `dataset_summary.md` | Human-readable counts: deviations by type/severity, and every site ranked by seeded deviation count — check this first to confirm the high/low-risk split still looks right after any regeneration. |
 
+## Multi-drug portfolio
+
+By default this generates **10 separate drug trials** (`DRUG_CONFIGS`), not
+just one. `protocol.json`/`sites.json`/`patients.json`/etc. above are always
+the *first* drug (`TRIAL-2026-ONC-04`, "Drug X"), byte-for-byte unchanged
+from the original single-drug generator. The other 9 are written as fully
+self-contained sibling datasets — same file shapes — to
+`data/synthetic/drugs/<protocol_id>/`, each run against a **random subset**
+of the *same* shared `sites.json` site pool, so a `site_id` legitimately
+appears under more than one drug with independent patients/visits/
+deviations per drug. Use `--num-protocols 1` to reproduce the legacy
+single-drug-only dataset.
+
 ## Design notes
 
 - **Only seeded deviations are true deviations.** All other records are

@@ -16,7 +16,7 @@ VALID_REVIEW_STATUSES = {"pending_review", "approved", "rejected"}
 
 # In-memory fallback state, keyed the same way the DB tables would be.
 _mem_deviations: dict[str, dict] = {}
-_mem_risk_scores: dict[str, dict] = {}  # keyed by site_id, latest wins
+_mem_risk_scores: dict[tuple[str, str], dict] = {}  # keyed by (protocol_id, site_id), latest wins
 _mem_capa_reports: dict[str, dict] = {}
 _mem_capa_reviews: dict[str, dict] = {}
 _mem_pipeline_runs: list[dict] = []
@@ -52,12 +52,12 @@ def save_risk_scores(scores: list[dict]) -> None:
     if db.USING_DB:
         with db.SessionLocal() as session:
             for s in scores:
-                session.query(SiteRiskScoreRow).filter_by(site_id=s["site_id"]).delete()
+                session.query(SiteRiskScoreRow).filter_by(site_id=s["site_id"], protocol_id=s["protocol_id"]).delete()
                 session.add(SiteRiskScoreRow(**{k: v for k, v in s.items() if k != "id"}))
             session.commit()
         return
     for s in scores:
-        _mem_risk_scores[s["site_id"]] = s
+        _mem_risk_scores[(s["protocol_id"], s["site_id"])] = s
 
 
 def save_capa_report(report) -> None:
@@ -132,12 +132,12 @@ def _row_to_dict(row, exclude: set[str] = frozenset()) -> dict:
     return {c.name: getattr(row, c.name) for c in row.__table__.columns if c.name not in exclude}
 
 
-def get_deviations_for_site(site_id: str) -> list[dict]:
+def get_deviations_for_site(site_id: str, protocol_id: str) -> list[dict]:
     if db.USING_DB:
         with db.SessionLocal() as session:
-            rows = session.query(DeviationRow).filter_by(site_id=site_id).all()
+            rows = session.query(DeviationRow).filter_by(site_id=site_id, protocol_id=protocol_id).all()
             return [_row_to_dict(r) for r in rows]
-    return [d for d in _mem_deviations.values() if d["site_id"] == site_id]
+    return [d for d in _mem_deviations.values() if d["site_id"] == site_id and d["protocol_id"] == protocol_id]
 
 
 def get_all_deviations(protocol_id: str | None = None) -> list[dict]:
@@ -151,12 +151,12 @@ def get_all_deviations(protocol_id: str | None = None) -> list[dict]:
     return [d for d in devs if not protocol_id or d["protocol_id"] == protocol_id]
 
 
-def get_risk_score(site_id: str) -> dict | None:
+def get_risk_score(protocol_id: str, site_id: str) -> dict | None:
     if db.USING_DB:
         with db.SessionLocal() as session:
-            row = session.query(SiteRiskScoreRow).filter_by(site_id=site_id).first()
+            row = session.query(SiteRiskScoreRow).filter_by(site_id=site_id, protocol_id=protocol_id).first()
             return _row_to_dict(row, exclude={"id"}) if row else None
-    return _mem_risk_scores.get(site_id)
+    return _mem_risk_scores.get((protocol_id, site_id))
 
 
 def get_ranking(protocol_id: str) -> list[dict]:
@@ -184,9 +184,12 @@ def get_capa_report(capa_id: str) -> dict | None:
 def get_all_capa_reports(protocol_id: str | None = None) -> list[dict]:
     if db.USING_DB:
         with db.SessionLocal() as session:
-            rows = session.query(CapaReportRow).all()
-            return [_row_to_dict(r) for r in rows]
-    return list(_mem_capa_reports.values())
+            q = session.query(CapaReportRow)
+            if protocol_id:
+                q = q.filter_by(protocol_id=protocol_id)
+            return [_row_to_dict(r) for r in q.all()]
+    reports = list(_mem_capa_reports.values())
+    return [r for r in reports if not protocol_id or r.get("protocol_id") == protocol_id]
 
 
 def get_latest_pipeline_run(protocol_id: str) -> dict | None:

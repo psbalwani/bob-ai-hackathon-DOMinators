@@ -1,10 +1,19 @@
 import type { PropsWithChildren } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { useAuth } from "../lib/auth"
 
 const NAV_ITEMS = [{ to: "/", label: "Trial Overview", icon: IconGrid }]
 
 export function Layout({ children }: PropsWithChildren) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, currentProtocolId, setCurrentProtocolId, logout } = useAuth()
+  const currentProtocol = user?.protocols.find((p) => p.protocol_id === currentProtocolId)
+
+  function handleLogout() {
+    logout()
+    navigate("/login", { replace: true })
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-surface text-ink lg:flex-row">
@@ -38,15 +47,47 @@ export function Layout({ children }: PropsWithChildren) {
           ))}
         </nav>
 
-        <div className="mt-auto hidden rounded-lg border border-border bg-surface px-3 py-2.5 lg:block">
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-risk-low opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-risk-low" />
-            </span>
-            TRIAL-2026-ONC-04
+        <div className="mt-auto hidden flex-col gap-2 lg:flex">
+          {user && user.protocols.length > 0 && (
+            <div className="rounded-lg border border-border bg-surface px-3 py-2.5">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+                {user.protocols.length > 1 ? "Switch drug" : "Drug"}
+              </div>
+              {user.protocols.length > 1 ? (
+                <select
+                  value={currentProtocolId ?? ""}
+                  onChange={(e) => {
+                    setCurrentProtocolId(e.target.value)
+                    navigate("/")
+                  }}
+                  className="w-full bg-transparent text-[11px] font-medium text-ink focus:outline-none"
+                >
+                  {user.protocols.map((p) => (
+                    <option key={p.protocol_id} value={p.protocol_id}>
+                      {p.drug} · {p.protocol_id}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-risk-low opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-risk-low" />
+                    </span>
+                    {currentProtocol?.protocol_id}
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted">{currentProtocol?.drug}</div>
+                </>
+              )}
+            </div>
+          )}
+          <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2 text-[11px]">
+            <span className="font-medium text-ink">{user?.username}</span>
+            <button onClick={handleLogout} className="font-medium text-muted transition-colors hover:text-ink">
+              Log out
+            </button>
           </div>
-          <div className="mt-0.5 text-[11px] text-muted">Phase III Oncology</div>
         </div>
       </aside>
 

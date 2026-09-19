@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../lib/api"
+import { useAuth } from "../lib/auth"
 import { RiskBadge } from "../components/RiskBadge"
 import { ReviewBadge } from "../components/ReviewBadge"
 import { TrendTag } from "../components/TrendTag"
@@ -20,14 +21,24 @@ const SEVERITY_STYLES: Record<Severity, string> = {
 export function SiteDrilldown() {
   const { siteId = "" } = useParams()
   const navigate = useNavigate()
+  const { currentProtocolId } = useAuth()
   const [typeFilter, setTypeFilter] = useState<string>("All")
 
-  const siteQuery = useQuery({ queryKey: ["site", siteId], queryFn: () => api.getSite(siteId) })
-  const deviationsQuery = useQuery({
-    queryKey: ["site-deviations", siteId],
-    queryFn: () => api.getSiteDeviations(siteId),
+  const siteQuery = useQuery({
+    queryKey: ["site", currentProtocolId, siteId],
+    queryFn: () => api.getSite(siteId, currentProtocolId!),
+    enabled: !!currentProtocolId,
   })
-  const capaQuery = useQuery({ queryKey: ["site-capa", siteId], queryFn: () => api.getSiteCapaReports(siteId) })
+  const deviationsQuery = useQuery({
+    queryKey: ["site-deviations", currentProtocolId, siteId],
+    queryFn: () => api.getSiteDeviations(siteId, currentProtocolId!),
+    enabled: !!currentProtocolId,
+  })
+  const capaQuery = useQuery({
+    queryKey: ["site-capa", currentProtocolId, siteId],
+    queryFn: () => api.getSiteCapaReports(siteId, currentProtocolId!),
+    enabled: !!currentProtocolId,
+  })
 
   const deviationTypes = useMemo(
     () => Array.from(new Set((deviationsQuery.data ?? []).map((d) => d.type))),
@@ -38,7 +49,7 @@ export function SiteDrilldown() {
     return typeFilter === "All" ? devs : devs.filter((d) => d.type === typeFilter)
   }, [deviationsQuery.data, typeFilter])
 
-  if (siteQuery.isLoading) return <CenteredSpinner />
+  if (!currentProtocolId || siteQuery.isLoading) return <CenteredSpinner />
   if (siteQuery.isError || !siteQuery.data) return <ErrorState message={`Couldn't load site '${siteId}'.`} />
 
   const site = siteQuery.data

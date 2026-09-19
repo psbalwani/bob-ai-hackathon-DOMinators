@@ -89,6 +89,22 @@ This is the single source of truth for what's left before submission. It covers 
 
 ---
 
+## Track D — Multi-Drug Expansion (post-freeze addition, not in the original 4-track plan)
+
+Extends the single-drug platform to 10 separate drug trials sharing one physical site pool, each with its own drug-owner login so an owner only sees their own trial(s). Flagged here per `docs/03_team_division.md`'s rule that a contract change gets flagged, not silently made — see the "Post-freeze addition" notes now in `docs/04_data_schema.md` and `docs/05_api_contracts.md`.
+
+- [x] Synthetic data generator extended to 10 drug protocols sharing one site pool (`src/data/generate_synthetic_data.py` — `DRUG_CONFIGS`, `pick_site_subset`) — the original single-drug protocol (`TRIAL-2026-ONC-04`) is generated first and byte-for-byte unchanged in `data/synthetic/`; the other 9 are written to `data/synthetic/drugs/<protocol_id>/`. Verified: regenerating reproduces the original 18/289/2023/52 counts exactly, and 18/18 sites end up shared across more than one protocol
+- [x] `CapaReport` gained an additive `protocol_id` field (`src/capa/models.py`, `src/capa/generator.py`) so a CAPA report on a shared site is attributed to the right drug — defaults to `""` so existing call sites/tests are unaffected; 4 tests that asserted an exact field set were updated (`tests/test_capa.py`, `tests/test_capa_extended.py`, `tests/test_integration_abc.py`)
+- [x] Backend gateway (`src/backend/app/main.py`) rebuilt around a multi-protocol dataset registry (discovers every `data/synthetic/` + `data/synthetic/drugs/*/` dataset at startup) instead of one hardcoded global dataset; every route now resolves/requires `protocol_id` and enforces ownership
+- [x] Drug-owner login (`src/backend/app/auth.py`) — stdlib-only PBKDF2 password hashing + HMAC-signed tokens (passlib[bcrypt]/python-jose were tried first and hit a real version-skew crash — see the module docstring — so no new dependency was added). `POST /auth/login`, `GET /auth/me`. 11 seeded demo accounts (`owner_onc04`..`owner_onc13`, `owner_portfolio`), all password `changeme123`
+- [x] Live Neon DB migrated for the new `capa_reports.protocol_id` column (existing table predated the schema change) — `ALTER TABLE capa_reports ADD COLUMN IF NOT EXISTS protocol_id VARCHAR NOT NULL DEFAULT ''`, run against the real instance and verified
+- [x] Persistence layer (`src/backend/app/persistence.py`, `models_db.py`) scoped risk-score/CAPA lookups by `(protocol_id, site_id)` instead of `site_id` alone, so a shared site can't have one protocol's cached score/report leak into another's
+- [x] Test coverage: `tests/test_backend_multidrug.py` (9 tests) — login, wrong-password/no-token rejection, cross-protocol 403s on dashboard/site/deviation/CAPA routes, and a same-`site_id`-different-`protocol_id` independent-risk-score check. All pass live against the real Neon DB
+- [x] Frontend: login page + `AuthProvider` (`src/frontend/src/lib/auth.tsx`, `pages/LoginPage.tsx`), protected routes (`App.tsx`), a drug switcher in the sidebar (`Layout.tsx`, only shown when the logged-in owner has >1 protocol), and every page/API call threaded with the current `protocol_id` instead of a hardcoded constant (`lib/api.ts`). CAPA export switched from a plain `<a href>` to an authenticated fetch + Blob download, since the export route now requires the bearer token too. Verified live in a real browser (Playwright driver, not just typecheck): login → dashboard for a single-drug owner, drug switcher for a 10-drug portfolio owner, live switch to a different drug's dashboard, and a site drill-down under the new drug — all screenshotted, zero console errors
+- [x] `docs/setup-guide.md` updated with the new `TOKEN_SECRET` env var and a table of the 11 seeded demo accounts/password
+
+---
+
 ## Integration Checkpoints
 
 - [x] **Hour 4:** Track C's v1 synthetic dataset shipped — `data/synthetic/` (see Track C section above)
@@ -155,7 +171,7 @@ This is the single source of truth for what's left before submission. It covers 
 
 ## Automated Validation
 
-- [ ] Latest push shows **Validate Submission** GitHub Action GREEN 🟢 (repo → Actions tab)
+- [x] Latest push shows **Validate Submission** GitHub Action GREEN 🟢 (repo → Actions tab) — verified on 16 Sep 2026 via GitHub Actions runs #89 and #88.
 - [ ] If red: open the run, read the error, fix, push again (don't ignore it)
 
 ---

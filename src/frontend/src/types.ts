@@ -101,4 +101,11 @@ export interface Protocol {
   title: string
   ich_gcp_version: string
   visit_schedule: { visit_id: string; name: string; scheduled_day: number }[]
+  dosing_rules: { drug: string; min_mg: number; max_mg: number; route: string }
+}
+
+export interface OwnedProtocol {
+  protocol_id: string
+  title: string
+  drug: string
 }

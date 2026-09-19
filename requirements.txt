@@ -22,3 +22,8 @@ fpdf2>=2.7
 # these don't block a DB-less local run.
 sqlalchemy>=2.0
 psycopg2-binary>=2.9
+
+# Track D gateway auth (src/backend/app/auth.py): per-drug-owner login.
+# Deliberately stdlib-only (hashlib/hmac) -- passlib[bcrypt] was tried first
+# and hit a real version-skew crash (passlib 1.7.4 calls a bcrypt.__about__
+# attribute that bcrypt >= 4.0 removed), so no new dependency is needed here.

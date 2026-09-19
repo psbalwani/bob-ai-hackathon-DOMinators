@@ -2,7 +2,17 @@
 
 Purpose: let Tracks A, B, C build and test independently, and let Track D integrate them without renegotiating shapes mid-hackathon. Each track should expose its own module behind these endpoints *itself* early on (even a rough stub), so Track D can point at it from hour 4 onward instead of waiting.
 
-All request/response bodies use the objects defined in `04_data_schema.md`. Auth: a single shared API key header (`X-API-Key`) is enough for a hackathon demo — do not spend time on real auth.
+All request/response bodies use the objects defined in `04_data_schema.md`.
+
+**Auth (post-freeze update):** the original plan was a single shared `X-API-Key` header ("don't spend time on real auth"). That changed once the platform grew to 10 separate drug trials that must not see each other's data: Track D's gateway (`src/backend/app/main.py`) now requires a bearer token from `POST /auth/login` (see below) on every request, and 403s any request for a `protocol_id` the caller doesn't own. This only applies to the integrated gateway — Tracks A/B/C's own standalone dev services (ports 8001–8003) are unaffected and still single-dataset, unauthenticated dev tools.
+
+### `POST /auth/login`
+**Request:** `{ "username": "...", "password": "..." }`
+**Response:** `{ "access_token": "...", "token_type": "bearer", "user": { "user_id", "username", "protocols": [{"protocol_id","title","drug"}, ...] } }`
+Send the token back as `Authorization: Bearer <access_token>` on every subsequent request.
+
+### `GET /auth/me`
+Returns the same `user` shape as login, for restoring a session (e.g. after a page refresh) without re-prompting for a password.
 
 ---
 
@@ -64,9 +74,9 @@ Returns all sites for a protocol, ranked by `risk_score` descending.
 ### `POST /capa/generate`
 Generates a CAPA report for a deviation or a site cluster.
 
-**Request**
+**Request** (Track D gateway; `protocol_id` required now that a `site_id` alone is ambiguous across shared-site protocols — Track C's own standalone service at port 8003 still only takes `scope`/`site_id`/`deviation_ids`, since its dataset is always single-protocol)
 ```json
-{ "scope": "site", "site_id": "SITE-017", "deviation_ids": ["DEV-000456", "DEV-000461"] }
+{ "protocol_id": "TRIAL-2026-ONC-04", "scope": "site", "site_id": "SITE-017", "deviation_ids": ["DEV-000456", "DEV-000461"] }
 ```
 *(`scope` can be `"deviation"` for a single deviation, or `"site"` for a clustered report)*
 
@@ -81,6 +91,8 @@ Returns the report formatted for export.
 ---
 
 ## Track D — Orchestration / Dashboard Aggregation
+
+**Multi-drug (post-freeze):** every route below requires the `Authorization: Bearer` token from `POST /auth/login` and, on any route keyed only by `site_id`/`deviation_id`/`capa_id`, resolves or requires `protocol_id` and 403s if the caller doesn't own it (see the Auth section above and `src/backend/app/main.py`).
 
 ### `POST /pipeline/run`
 Runs the full pipeline for a protocol: detect → score → generate CAPA for high-risk sites. Used to (re)populate the dashboard.
