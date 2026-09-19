@@ -143,6 +143,85 @@ its 6 deviations are diluted across 133 visits (a 4.5% rate, the lowest of
 the five) — the model is reporting genuine relative severity, not just
 echoing the seed label, which is the intended behavior.
 
+## Drug-Level Aggregation — FDA Approval Readiness (stretch feature)
+
+`drug_aggregate.py` rolls up every site's `RiskScore` for a drug, plus that
+drug's deviations and CAPA remediation status, into one `DrugPerformance`
+object (`docs/04_data_schema.md` section 7): a single `drug_risk_index`
+(0-100, same direction as `risk_score`) and a `readiness_band` a
+regulatory-affairs/trial-sponsor reader can act on without opening every
+site individually. This does not re-score sites — it aggregates outputs
+Track A/B/C already produce, at one more level of rollup than
+`pipeline.dashboard_summary` (which lists sites; this collapses them into
+one verdict).
+
+### Why these five factors
+
+| Factor | Weight | Why |
+|---|---|---|
+| `avg_site_risk` | **0.35** | The overall exposure level across the network — if the average site is already risky, no other factor should be able to paper over that. |
+| `high_risk_site_share` | **0.25** | Breadth matters independently of average: one severe outlier averaged against many clean sites can look deceptively okay, so the *fraction* of sites in the High band is tracked separately. |
+| `major_deviation_rate` | **0.20** | The rate (not count) of Major/patient-safety deviations across every visit in the drug's network — the single factor that maps most directly to what an FDA inspection is actually looking for. |
+| `unresolved_capa_rate` | **0.10** | Whether known issues are being remediated. A drug with real problems but fully-approved CAPAs in flight is in a meaningfully better position than one where remediation is stalled or rejected — this is what separates "problem exists" from "problem is uncontrolled." |
+| `trend_pressure` | **0.10** | Net directional signal — more sites trending worse than better says the situation is compounding, not just present. Lowest weight because `trend` is already the noisiest per-site label (see above). |
+
+Weights sum to 1.0. When the caller has no CAPA visibility (`capa_reports=None`
+— Track B's own standalone service, which has no CAPA data), the
+`unresolved_capa_rate` factor is dropped entirely and its weight
+redistributed proportionally across the other four, rather than treated as
+`0` (which would silently read as "every issue already resolved" instead of
+"unknown"). See `test_missing_capa_data_is_not_treated_as_zero_risk` in
+`tests/test_drug_aggregate.py`.
+
+### From raw factors to `drug_risk_index`
+
+Same shape as the site-level model: `contribution_i = weight_i * raw_i`,
+`drug_risk_index = round(100 * sum(contribution_i))`, `factor_breakdown_i =
+contribution_i / sum(contribution_j)`. `major_deviation_rate`'s raw value is
+capped via `min(raw / 0.015, 1.0)` — calibrated the same way as
+`indicators.py`'s caps, by measuring the actual Major-deviation rate across
+the real 10-drug portfolio (`data/synthetic/` + `data/synthetic/drugs/*`,
+range 0.006–0.015) rather than picked abstractly.
+
+### `readiness_band` thresholds
+
+| Band | `drug_risk_index` |
+|---|---|
+| High Risk of Rejection | ≥ 55 |
+| Conditional — Remediation Required | 25–54 |
+| Likely Approval Ready | < 25 |
+
+### Sanity-check against the real 10-drug portfolio — verified
+
+Run via `python -m src.risk_scoring.drug_aggregate --data-dir data/synthetic`
+(and the sibling `data/synthetic/drugs/*` datasets): across all 10 drugs the
+index ranges 18–37, with the 4 drugs that have at least one High-risk site
+or an above-median Major-deviation rate landing in "Conditional", and the
+other 6 in "Likely Approval Ready" — none of the demo-scale drugs are
+severely broken enough to hit "High Risk of Rejection", which matches
+reality (this dataset was built to make *site-level* risk visibly
+differentiated, not to seed a catastrophic drug). The hand-built fixtures in
+`tests/test_drug_aggregate.py` cover the "High Risk of Rejection" case
+directly (a drug with a saturated Major-deviation rate, majority-High sites,
+and mostly-rejected CAPAs).
+
+### Implementation status
+
+- ✅ `drug_aggregate.py` — `compute_drug_performance`, weighting, factor
+  breakdown, deterministic (never LLM-generated, never able to cite a
+  number not already in the aggregated stats) rationale sentences, plus a
+  CLI for the sanity check above.
+- ✅ `tests/test_drug_aggregate.py` — a clearly approval-ready drug, a
+  clearly high-risk drug, the missing-CAPA-data redistribution behavior,
+  the zero-sites edge case, and a check that rationale text never cites a
+  number that doesn't match the aggregated stats. All 5 pass.
+- ✅ Wired into Track D's gateway at `GET /dashboard/drug-performance`
+  (`src/backend/app/pipeline.py::drug_performance_summary`, `src/backend/app/main.py`)
+  using real persisted risk scores/deviations/CAPA review statuses, and into
+  this module's own standalone service at `GET /risk-score/drug-summary`
+  (`api.py`, without CAPA data). Frontend: `src/frontend/src/pages/DrugPerformance.tsx`,
+  a new "Drug Performance" tab in the sidebar.
+
 ## Implementation status
 
 - ✅ `loaders.py` — loads protocol/sites/visit records; adapts Track C's

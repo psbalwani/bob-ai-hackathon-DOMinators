@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react"
 import { Navigate, Route, Routes, useLocation } from "react-router-dom"
 import { Layout } from "./components/Layout"
 import { TrialOverview } from "./pages/TrialOverview"
+import { DrugPerformance } from "./pages/DrugPerformance"
 import { SiteDrilldown } from "./pages/SiteDrilldown"
 import { DeviationDetail } from "./pages/DeviationDetail"
 import { CapaView } from "./pages/CapaView"
@@ -29,6 +30,7 @@ export function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<TrialOverview />} />
+                <Route path="/drug-performance" element={<DrugPerformance />} />
                 <Route path="/sites/:siteId" element={<SiteDrilldown />} />
                 <Route path="/deviations/:deviationId" element={<DeviationDetail />} />
                 <Route path="/capa/:capaId" element={<CapaView />} />

@@ -131,3 +131,37 @@ Since real patient data cannot and should not be used, the team will generate a 
 - Deliberately seed a known set of deviations (e.g., 40–60) with pre-recorded expected type/severity, to use as the ground-truth test set for Track A's recall metric (see `01_project_planning.md` Section 8).
 - Make 3–5 sites clearly high-risk (clustered severe deviations, worsening trend) and 3–5 clearly low-risk, so Track B's ranking is visibly sensible in the demo.
 - Keep all identifiers synthetic (`PT-xxxxx`, `SITE-xxx`) — never use real names or real trial identifiers.
+
+---
+
+## 7. Drug Performance Summary (output of Track B aggregation, post-freeze addition, stretch feature)
+
+Aggregates every site's `Site Risk Score` (section 4) plus the drug's deviations and CAPA review statuses into one drug-level object — the "single source of truth" a regulatory-affairs/trial-sponsor reader uses to gauge FDA-approval readiness across the whole site network, rather than one site at a time. See `src/risk_scoring/drug_aggregate.py` for the full weighting rationale (mirrors section 4's indicator-weighting approach, one level up).
+
+```json
+{
+  "protocol_id": "TRIAL-2026-ONC-04",
+  "computed_at": "2026-08-22T09:20:00Z",
+  "drug_risk_index": 31,
+  "readiness_band": "Conditional — Remediation Required",
+  "factor_breakdown": {
+    "avg_site_risk": 0.30,
+    "high_risk_site_share": 0.04,
+    "major_deviation_rate": 0.40,
+    "unresolved_capa_rate": 0.19,
+    "trend_pressure": 0.05
+  },
+  "rationale": [
+    "19 Major (patient-safety) deviations recorded across the drug's site network — 40% of the overall risk index.",
+    "Average site risk score is 27/100 across 18 sites — 30% of the overall risk index."
+  ],
+  "total_sites": 18,
+  "sites_by_band": { "High": 1, "Medium": 3, "Low": 14 },
+  "deviations_by_severity": { "Major": 19, "Minor": 22, "Administrative": 11 },
+  "trend_breakdown": { "worsening": 3, "improving": 1, "stable": 14, "volatile": 0 },
+  "capa_summary": { "total": 4, "approved": 0, "pending_review": 4, "rejected": 0 },
+  "top_risk_sites": [ { "site_id": "SITE-013", "risk_score": 80, "risk_band": "High" }, ... ]
+}
+```
+
+`readiness_band` is one of `"Likely Approval Ready"` / `"Conditional — Remediation Required"` / `"High Risk of Rejection"`, driven by `drug_risk_index` (0-100, same direction as `risk_score` — higher is worse) crossing the same style of calibrated thresholds as section 4's `risk_band`. `factor_breakdown` shares sum to 1.0, same convention as `indicator_breakdown` in section 4. `capa_summary` (and `unresolved_capa_rate` in `factor_breakdown`) is `null`/absent when the caller has no CAPA visibility (e.g. Track B's own standalone service) rather than being treated as zero unresolved risk — see `drug_aggregate.py`.

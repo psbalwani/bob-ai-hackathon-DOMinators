@@ -109,3 +109,35 @@ export interface OwnedProtocol {
   title: string
   drug: string
 }
+
+export type ReadinessBand = "Likely Approval Ready" | "Conditional — Remediation Required" | "High Risk of Rejection"
+
+export interface DrugFactorBreakdown {
+  avg_site_risk: number
+  high_risk_site_share: number
+  major_deviation_rate: number
+  unresolved_capa_rate?: number
+  trend_pressure: number
+}
+
+export interface DrugCapaSummary {
+  total: number
+  approved: number
+  pending_review: number
+  rejected: number
+}
+
+export interface DrugPerformance {
+  protocol_id: string
+  computed_at: string
+  drug_risk_index: number
+  readiness_band: ReadinessBand
+  factor_breakdown: DrugFactorBreakdown
+  rationale: string[]
+  total_sites: number
+  sites_by_band: Record<RiskBand, number>
+  deviations_by_severity: Record<Severity, number>
+  trend_breakdown: Record<Trend, number>
+  capa_summary: DrugCapaSummary | null
+  top_risk_sites: { site_id: string; risk_score: number; risk_band: RiskBand }[]
+}

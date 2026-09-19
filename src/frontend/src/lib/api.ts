@@ -3,6 +3,7 @@ import type {
   CapaReport,
   DashboardSummary,
   Deviation,
+  DrugPerformance,
   OwnedProtocol,
   Protocol,
   SiteDetail,
@@ -58,6 +59,11 @@ export const api = {
 
   runPipeline: (protocolId: string) =>
     client.post("/pipeline/run", { protocol_id: protocolId }).then((r) => r.data),
+
+  getDrugPerformance: (protocolId: string) =>
+    client
+      .get<DrugPerformance>("/dashboard/drug-performance", { params: { protocol_id: protocolId } })
+      .then((r) => r.data),
 
   listSites: (protocolId: string) =>
     client
