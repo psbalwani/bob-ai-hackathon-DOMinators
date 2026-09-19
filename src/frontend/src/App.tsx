@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom"
 import { Layout } from "./components/Layout"
 import { TrialOverview } from "./pages/TrialOverview"
 import { DrugPerformance } from "./pages/DrugPerformance"
+import { AdminOverview } from "./pages/AdminOverview"
 import { SiteDrilldown } from "./pages/SiteDrilldown"
 import { DeviationDetail } from "./pages/DeviationDetail"
 import { CapaView } from "./pages/CapaView"
@@ -30,6 +31,7 @@ export function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<TrialOverview />} />
+                <Route path="/admin" element={<AdminOverview />} />
                 <Route path="/drug-performance" element={<DrugPerformance />} />
                 <Route path="/sites/:siteId" element={<SiteDrilldown />} />
                 <Route path="/deviations/:deviationId" element={<DeviationDetail />} />
