@@ -8,7 +8,7 @@
 |---|---|
 | **Team Name** | DOMinators |
 | **Track** | AI |
-| **Team Lead** | Priyansh Balwani — psbalwani@gmail.com |
+| **Team Lead** | Priyansh Balwani - psbalwani@gmail.com |
 | **Members** | Arya Kayastha, Nancy Vaghela, Jay Changani |
 
 ---
