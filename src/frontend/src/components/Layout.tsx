@@ -1,13 +1,19 @@
 import type { PropsWithChildren } from "react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth"
+import { useTheme } from "../lib/theme"
+import { IconMoon, IconShieldCheck, IconSun } from "./icons"
 
-const NAV_ITEMS = [{ to: "/", label: "Trial Overview", icon: IconGrid }]
+const NAV_ITEMS = [
+  { to: "/", label: "Trial Overview", icon: IconGrid },
+  { to: "/drug-performance", label: "Drug Performance", icon: IconShieldCheck },
+]
 
 export function Layout({ children }: PropsWithChildren) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, currentProtocolId, setCurrentProtocolId, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const currentProtocol = user?.protocols.find((p) => p.protocol_id === currentProtocolId)
 
   function handleLogout() {
@@ -18,14 +24,25 @@ export function Layout({ children }: PropsWithChildren) {
   return (
     <div className="flex min-h-screen flex-col bg-surface text-ink lg:flex-row">
       <aside className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-5 py-4 lg:w-64 lg:flex-col lg:items-stretch lg:gap-7 lg:border-b-0 lg:border-r lg:py-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-strong text-base font-bold text-white shadow-card">
-            C
+        <div className="flex flex-1 items-center justify-between gap-2.5 lg:flex-initial">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-strong text-base font-bold text-white shadow-card">
+              C
+            </div>
+            <div className="leading-tight">
+              <div className="text-sm font-semibold text-ink">ClinIQ</div>
+              <div className="text-[11px] text-muted">Trial Risk Monitor</div>
+            </div>
           </div>
-          <div className="leading-tight">
-            <div className="text-sm font-semibold text-ink">ClinIQ</div>
-            <div className="text-[11px] text-muted">Trial Risk Monitor</div>
-          </div>
+
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:text-ink"
+          >
+            {theme === "dark" ? <IconSun className="h-4 w-4" /> : <IconMoon className="h-4 w-4" />}
+          </button>
         </div>
 
         <nav className="hidden flex-1 flex-col gap-1 lg:flex">

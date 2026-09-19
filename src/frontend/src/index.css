@@ -48,8 +48,12 @@
   color-scheme: light dark;
 }
 
+/* System preference applies by default -- but an explicit choice from the
+   theme toggle (Layout.tsx, data-theme="light"|"dark" on <html>) always
+   wins over it in both directions, which is why this is guarded with
+   :not([data-theme="light"]) rather than a bare :root. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-surface: var(--color-surface-dark);
     --color-card: var(--color-card-dark);
     --color-border: var(--color-border-dark);
@@ -62,6 +66,26 @@
     --shadow-card: var(--shadow-card-dark);
     --shadow-card-hover: var(--shadow-card-hover-dark);
   }
+}
+
+/* Explicit dark choice, independent of system preference. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: var(--color-surface-dark);
+  --color-card: var(--color-card-dark);
+  --color-border: var(--color-border-dark);
+  --color-ink: var(--color-ink-dark);
+  --color-muted: var(--color-muted-dark);
+  --color-brand-soft: var(--color-brand-soft-dark);
+  --color-risk-high-soft: var(--color-risk-high-soft-dark);
+  --color-risk-medium-soft: var(--color-risk-medium-soft-dark);
+  --color-risk-low-soft: var(--color-risk-low-soft-dark);
+  --shadow-card: var(--shadow-card-dark);
+  --shadow-card-hover: var(--shadow-card-hover-dark);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 html,
