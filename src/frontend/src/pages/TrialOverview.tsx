@@ -14,7 +14,8 @@ type SortKey = "risk_score" | "site_name" | "open_deviation_count"
 
 export function TrialOverview() {
   const navigate = useNavigate()
-  const { currentProtocolId } = useAuth()
+  const { user, currentProtocolId } = useAuth()
+  const currentProtocol = user?.protocols.find((p) => p.protocol_id === currentProtocolId)
   const [query, setQuery] = useState("")
   const [bandFilter, setBandFilter] = useState<RiskBand | "All">("All")
   const [sortKey, setSortKey] = useState<SortKey>("risk_score")
@@ -55,6 +56,7 @@ export function TrialOverview() {
       <header className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Trial Overview</h1>
         <p className="mt-1 text-sm text-muted">
+          {currentProtocol && <>{currentProtocol.drug} · </>}
           {summary.protocol_id} · {summary.total_sites} sites · {summary.total_patients} patients ·{" "}
           {summary.total_visits.toLocaleString()} visits
         </p>
