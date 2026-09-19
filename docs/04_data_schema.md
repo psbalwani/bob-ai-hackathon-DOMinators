@@ -4,6 +4,8 @@ This is the shared source of truth for data shapes across all four tracks. **Fre
 
 Since real patient data cannot and should not be used, the team will generate a **synthetic dataset** matching this schema (Track C, hour 0–4 priority).
 
+**Post-freeze addition (multi-drug):** the platform now serves 10 separate drug trials (protocols), not just one. Every object below still has exactly one `protocol_id` and belongs to exactly one protocol — nothing about a single object's shape changed. What's new: (1) sites are shared across protocols (a `site_id` can appear under more than one protocol, with independent patients/visits/deviations/risk scores per protocol), and (2) `CapaReport` (section 5) gained an additive `protocol_id` field so a CAPA report on a shared site can be attributed to the right drug. See `src/data/generate_synthetic_data.py`'s `DRUG_CONFIGS` for the 10 protocols and `docs/05_api_contracts.md`'s updated auth section for how per-drug-owner access is enforced.
+
 ---
 
 ## 1. Protocol Specification
@@ -114,9 +116,12 @@ Since real patient data cannot and should not be used, the team will generate a 
   "suggested_owner_role": "Site Principal Investigator",
   "suggested_due_window_days": 14,
   "generated_at": "2026-08-22T09:25:00Z",
-  "evidence_citations": ["DEV-000456", "Section 4.2 - Prohibited Concomitant Medications"]
+  "evidence_citations": ["DEV-000456", "Section 4.2 - Prohibited Concomitant Medications"],
+  "protocol_id": "TRIAL-2026-ONC-04"
 }
 ```
+
+**Post-freeze addition:** `protocol_id` (new field, nothing renamed/removed) — derived from the report's underlying deviations, so a CAPA report on a site that hosts more than one protocol can still be attributed to the correct drug.
 
 ---
 

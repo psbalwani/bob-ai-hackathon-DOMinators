@@ -237,7 +237,7 @@ class TestTrackAToTrackC:
             "capa_id", "scope", "site_id", "related_deviation_ids",
             "root_cause", "corrective_action", "preventive_action",
             "suggested_owner_role", "suggested_due_window_days",
-            "generated_at", "evidence_citations",
+            "generated_at", "evidence_citations", "protocol_id",
         }
         report = generator.generate(
             "deviation", [detected_deviations[0]], protocol, ich_corpus, "CAPA-INT-FIELDS"

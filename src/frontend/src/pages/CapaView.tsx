@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, client } from "../lib/api"
+import { downloadTextFile } from "../lib/download"
 import { Card, CardBody, CardHeader } from "../components/Card"
 import { ReviewBadge, REVIEW_LABELS } from "../components/ReviewBadge"
 import { CenteredSpinner, ErrorState } from "../components/Spinner"
@@ -33,6 +34,11 @@ export function CapaView() {
     mutationFn: (decision: "approve" | "reject") =>
       api.reviewCapa(capaId, decision, reviewerName.trim() || undefined),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["capa", capaId] }),
+  })
+
+  const exportMutation = useMutation({
+    mutationFn: () => api.exportCapa(capaId, "markdown"),
+    onSuccess: (markdown) => downloadTextFile(`${capaId}.md`, markdown, "text/markdown"),
   })
 
   if (isLoading) return <CenteredSpinner />
@@ -70,14 +76,13 @@ export function CapaView() {
         </div>
 
         {isApproved ? (
-          <a
-            href={api.getCapaExportUrl(capa.capa_id, "markdown")}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-strong"
+          <button
+            onClick={() => exportMutation.mutate()}
+            disabled={exportMutation.isPending}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-strong disabled:opacity-50"
           >
-            Export Markdown
-          </a>
+            {exportMutation.isPending ? "Exporting…" : "Export Markdown"}
+          </button>
         ) : (
           <span
             title="This report must be approved before it can be exported"

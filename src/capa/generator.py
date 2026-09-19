@@ -154,4 +154,5 @@ def generate(
         suggested_due_window_days=templates.DUE_WINDOW_DAYS_BY_SEVERITY[overall_severity],
         generated_at=generated_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         evidence_citations=citations,
+        protocol_id=deviations[0].get("protocol_id", ""),
     )

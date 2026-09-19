@@ -53,6 +53,10 @@ class CapaReportRow(Base):
     capa_id = Column(String, primary_key=True)
     scope = Column(String, nullable=False)
     site_id = Column(String, nullable=False, index=True)
+    # Additive column: needed once a site can belong to more than one
+    # protocol/drug, so a CAPA report for SITE-017 under one protocol isn't
+    # mistaken for another protocol's report on the same physical site.
+    protocol_id = Column(String, nullable=False, index=True, default="")
     related_deviation_ids = Column(JSON, nullable=False)
     root_cause = Column(String, nullable=False)
     corrective_action = Column(String, nullable=False)

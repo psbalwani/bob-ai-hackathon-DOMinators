@@ -108,9 +108,10 @@ def classify(protocol: dict, record: dict, finding: Finding) -> tuple[str, str, 
         )
 
     if finding.type == "banned_comedication":
+        drug = protocol.get("dosing_rules", {}).get("drug", "the study drug")
         return (
             "Major",
-            "Prohibited co-medication administered concurrently with Drug X; "
+            f"Prohibited co-medication administered concurrently with {drug}; "
             "known CYP450 interaction poses a direct patient safety risk.",
             clause_ref,
         )

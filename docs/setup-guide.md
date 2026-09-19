@@ -27,8 +27,20 @@ cp src/.env.example src/.env
 | `GEMINI_API_KEY` / `GEMINI_MODEL` | Fallback LLM option | No — skeleton only, not wired into any code path yet |
 | `DATABASE_URL` | A PostgreSQL connection string (e.g. from [Neon](https://neon.tech), `postgresql://user:pass@host/db`) | No — Track D's backend (`src/backend`) falls back to an in-memory store if this isn't set, so the app runs with zero DB setup. Set this to get real persistence across restarts. |
 | `APP_PORT` | Backend gateway port | No (default `8000`) |
+| `TOKEN_SECRET` | Signing secret for drug-owner login tokens (`src/backend/app/auth.py`) | No — falls back to an insecure dev default so `uvicorn --reload` works out of the box locally; set a real random value for any non-local deployment |
 
 The frontend (`src/frontend`) reads its own `.env` — copy `src/frontend/.env.example` to `src/frontend/.env.local` if the backend isn't on the default `http://localhost:8000`.
+
+### Logging in (multi-drug dashboard)
+
+The gateway now requires login — there are 11 seeded demo accounts, one per drug trial plus one portfolio account that owns all 10 (see `src/backend/app/auth.py`'s `ALL_PROTOCOL_IDS`/`_seed_users`). All seeded accounts share the same demo password.
+
+| Username | Owns |
+|---|---|
+| `owner_onc04` .. `owner_onc13` | One drug each (`TRIAL-2026-ONC-04` .. `TRIAL-2026-ONC-13`) |
+| `owner_portfolio` | All 10 drugs — shows a drug switcher in the sidebar |
+
+Password for every seeded account: `changeme123`. **Demo-only** — never reuse this for a real deployment.
 
 Each track's own standalone service can also be run independently against its own port, for isolated testing:
 

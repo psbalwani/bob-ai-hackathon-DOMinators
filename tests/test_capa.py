@@ -39,6 +39,7 @@ CAPA_FIELDS = {
     "suggested_due_window_days",
     "generated_at",
     "evidence_citations",
+    "protocol_id",
 }
 
 

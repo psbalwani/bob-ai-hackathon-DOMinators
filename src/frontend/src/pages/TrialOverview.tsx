@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "../lib/api"
+import { useAuth } from "../lib/auth"
 import { RiskBadge } from "../components/RiskBadge"
 import { TrendTag } from "../components/TrendTag"
 import { StatTile } from "../components/StatTile"
@@ -13,12 +14,21 @@ type SortKey = "risk_score" | "site_name" | "open_deviation_count"
 
 export function TrialOverview() {
   const navigate = useNavigate()
+  const { currentProtocolId } = useAuth()
   const [query, setQuery] = useState("")
   const [bandFilter, setBandFilter] = useState<RiskBand | "All">("All")
   const [sortKey, setSortKey] = useState<SortKey>("risk_score")
 
-  const summaryQuery = useQuery({ queryKey: ["dashboard-summary"], queryFn: api.getDashboardSummary })
-  const sitesQuery = useQuery({ queryKey: ["sites"], queryFn: api.listSites })
+  const summaryQuery = useQuery({
+    queryKey: ["dashboard-summary", currentProtocolId],
+    queryFn: () => api.getDashboardSummary(currentProtocolId!),
+    enabled: !!currentProtocolId,
+  })
+  const sitesQuery = useQuery({
+    queryKey: ["sites", currentProtocolId],
+    queryFn: () => api.listSites(currentProtocolId!),
+    enabled: !!currentProtocolId,
+  })
 
   const filteredSites = useMemo(() => {
     let sites = sitesQuery.data ?? []
@@ -34,7 +44,7 @@ export function TrialOverview() {
     })
   }, [sitesQuery.data, query, bandFilter, sortKey])
 
-  if (summaryQuery.isLoading || sitesQuery.isLoading) return <CenteredSpinner />
+  if (!currentProtocolId || summaryQuery.isLoading || sitesQuery.isLoading) return <CenteredSpinner />
   if (summaryQuery.isError || sitesQuery.isError)
     return <ErrorState message="Couldn't reach the Track D gateway. Is the backend running on port 8000?" />
 
